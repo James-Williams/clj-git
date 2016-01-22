@@ -16,3 +16,8 @@
     (is (= (object-type "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")
            "blob")))
   )
+
+(deftest t-
+  (testing "Complete '9daead'"
+    (is (= (complete-hash "9daeaf")
+            "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"))))
