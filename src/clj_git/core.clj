@@ -75,3 +75,8 @@
   (let [header (first (read-object hash-hex))]
     (first (clojure.string/split header #" "))))
 
+(defn branch
+  [b]
+  (let [filepath (str (git-root) ".git/refs/heads/" b)]
+    (clojure.string/replace (slurp filepath) #"\n" "")))
+
