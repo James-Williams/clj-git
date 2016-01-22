@@ -36,3 +36,11 @@
                :hash "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"}])))
   )
 
+(deftest t-read-index
+  (testing "Reading 'first_index' fixture into a struct")
+    (with-redefs [git-root (fn [] "test/fixture1/")]
+      (is (= (read-index)
+             [ {:inode 0x2008ba, :device 0x81a4, :filesize 0x5,
+                :hash "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"} ])))
+    )
+

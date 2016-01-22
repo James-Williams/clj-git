@@ -12,7 +12,7 @@
   (let [full-text (str "blob " (count text) "\0" text)]
     (sha-1-hex full-text)))
 
-(defn git-root [] "./")
+(defn git-root [] "./.git/")
 
 (defn read-file [path]
   (with-open [out (java.io.ByteArrayOutputStream.)]
@@ -32,7 +32,7 @@
     (.toByteArray out)))
 
 (defn all-objects []
-  (let [object-path (str (git-root) ".git/objects/")
+  (let [object-path (str (git-root) "objects/")
         pref-files (drop 1 (file-seq (clojure.java.io/file object-path)))
         are-files (filter #(.isFile %) pref-files)
         hashes (map #(str (.getName (.getParentFile %))
@@ -61,7 +61,7 @@
   [hash-prefix]
   (let [hash-hex (complete-hash hash-prefix)
         filepath (str (git-root) 
-                      ".git/objects/" 
+                      "objects/"
                       (subs hash-hex 0 2) "/" 
                       (subs hash-hex 2 (count hash-hex)))
         bs (seq (decompress-zlib (read-file filepath)))
@@ -106,6 +106,20 @@
 
 (defn branch
   [b]
-  (let [filepath (str (git-root) ".git/refs/heads/" b)]
+  (let [filepath (str (git-root) "refs/heads/" b)]
     (clojure.string/replace (slurp filepath) #"\n" "")))
+
+(defn read-index []
+  (let [filepath (str (git-root) "index")
+        bs (seq (read-file filepath))
+        hs (vec (map #(format "%02x" (mod % 256)) bs))
+        es (drop 12 bs)
+        to-num (fn [x] (->> x
+                           (clojure.string/join)
+                           (str "0x")
+                           (read-string)))]
+    [{:inode (to-num (subvec hs 0x20 0x24)),
+     :device (to-num (subvec hs 0x24 0x28)),
+     :filesize (to-num (subvec hs 0x30 0x34)),
+     :hash (clojure.string/join (subvec hs 0x34 0x48))}]))
 
