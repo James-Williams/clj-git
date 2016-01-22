@@ -5,6 +5,8 @@
 
 (def SHA-1-HEX-LENGTH 40)
 
+(defn to-str [x] (apply str (map char x)))
+
 (defn hash-blob
   [text]
   (let [full-text (str "blob " (count text) "\0" text)]
@@ -63,17 +65,44 @@
                       (subs hash-hex 0 2) "/" 
                       (subs hash-hex 2 (count hash-hex)))
         bs (seq (decompress-zlib (read-file filepath)))
-        to-str (fn [x] (apply str (map char x)))]
-        (map to-str (split-at (inc (.indexOf bs (byte 0))) bs))))
-
-(defn object-content
-  [hash-hex]
-  (second (read-object hash-hex)))
+        ix (inc (.indexOf bs (byte 0)))]
+        (assert (> ix 0))
+        (split-at ix bs)))
 
 (defn object-type
   [hash-hex]
-  (let [header (first (read-object hash-hex))]
+  (let [header (to-str (first (read-object hash-hex)))]
     (first (clojure.string/split header #" "))))
+
+(defn tree
+  [h]
+  (let [[_ ins] (read-object h)
+        f-entry (fn [bs]
+                  (let [spacex (.indexOf bs (int \space))
+                        flags (take spacex bs)
+                        nxt (drop (inc spacex) bs)
+                        nullx (.indexOf nxt 0)
+                        name (take nullx nxt)
+                        remain (drop (inc nullx) nxt)
+                        len (/ SHA-1-HEX-LENGTH 2)
+                        hash-vals (take len remain)
+                        nxt-entry (drop len remain)
+                        to-hex #(format "%02x" (mod % 256))
+                        hash-str (clojure.string/join
+                                   (map to-hex hash-vals))
+                        obj-type (object-type hash-str)]
+                    (list { :name (to-str name)
+                            :flags (to-str flags)
+                            :type obj-type
+                            :hash hash-str}  nxt-entry)))]
+    (loop [[e r] (f-entry ins) out []]
+      (if (empty? r)
+        (conj out e)
+        (recur (f-entry r) (conj out e))))))
+
+(defn blob
+  [hash-hex]
+  (to-str (second (read-object hash-hex))))
 
 (defn branch
   [b]
