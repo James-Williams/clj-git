@@ -14,7 +14,7 @@
 
 (defn hash-file
   [filepath]
-  nil)
+  (hash-str (slurp filepath)))
 
 (defn git-root [] "./.git/")
 
@@ -169,9 +169,11 @@
 
 ; TODO: If times differ, double-check size then hash..
 
+
 (defn modified []
   (->> (read-index)
        (map #(list (:name %) (:mtime %) (file-mtime (:name %))))
        (filter #(not= 0 (.compareTo (nth % 1) (nth % 2))))
        (map first)))
 
+(defn to-commit []) ;TODO; This

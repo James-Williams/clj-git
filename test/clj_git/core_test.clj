@@ -17,6 +17,11 @@
            "blob")))
   )
 
+(deftest t-hash-file
+  (testing "Hash test_file")
+    (is (= (hash-file "test_file")
+           "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")))
+
 (deftest t-complete-hash
   (testing "Complete '9daead'"
     (is (= (complete-hash "9daeaf")
