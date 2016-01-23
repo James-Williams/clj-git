@@ -1,6 +1,7 @@
 (ns clj-git.core
   (:use clj-message-digest.core)
   (:use clojure.java.io)
+  (:use clojure.java.shell)
   (:require [clojure.java.io :as io])
   (:gen-class))
 
@@ -12,10 +13,6 @@
   [text]
   (let [full-text (str "blob " (count text) "\0" text)]
     (sha-1-hex full-text)))
-
-(defn hash-file
-  [filepath]
-  (hash-str (slurp filepath)))
 
 (defn git-root [] "./.git/")
 
@@ -178,7 +175,7 @@
                 mtime-ns (to-num (subvec vbs 0x0C 0x10))]
             (list (drop (+ entry-len zero-count) bs)
                   {:inode (to-num (subvec vbs 0x14 0x18)),
-                   :device (to-num (subvec vbs 0x18 0x1C)),
+                   :device (to-num (subvec vbs 0x10 0x14)),
                    :filesize (to-num (subvec vbs 0x24 0x28)),
                    :name (to-str (map to-num name-bs)),
                    :ctime (java.util.Date. (+ (* 1000 ctime-s) 
@@ -199,14 +196,21 @@
   [filepath]
   (java.util.Date. (.lastModified (java.io.File. filepath))))
 
-(defn file-inode
+(defn file-dev-inode
   [filepath]
-  (let [res (clojure.java.shell/sh "ls" "-i" filepath)
-        [out] (clojure.string/split (:out res) #" ")]
+  (let [res (sh "stat" filepath)
+        [dev inode] (clojure.string/split (:out res) #" ")]
     (assert (= 0 (:exit res)))
     (assert (= "" (:err res)))
-    (read-string out)))
+    (list (read-string dev) (read-string inode))))
 
+(defn file-size
+  [filepath]
+  (.length (clojure.java.io/file filepath)))
+
+(defn file-hash
+  [filepath]
+  (hash-str (slurp filepath)))
 
 ; TODO: If times differ, compute hash to check for differences
 ;   if not really different, update modified times back to index..?!
@@ -214,8 +218,6 @@
 ; TODO: If times match, also check filesize
 
 ; TODO: If times differ, double-check size then hash..
-
-
 (defn modified []
   (->> (read-index)
        (map #(list (:name %) (:mtime %) (file-mtime (:name %))))
@@ -224,4 +226,14 @@
 
 (defn files-to-commit []) ;TODO; This
 
+(defn file-index-entry
+  [fp]
+  (let [[device inode] (file-dev-inode fp)]
+    {:inode inode,
+     :device device,
+     :filesize (file-size fp),
+     :name fp,
+     :ctime (file-mtime fp),
+     :mtime (file-mtime fp),
+     :hash (file-hash fp)}))
 

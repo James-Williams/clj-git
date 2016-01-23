@@ -24,10 +24,9 @@
            (seq (byte-array (map byte "hello")))))
   )
 
-
 (deftest t-hash-file
   (testing "Hash test_file")
-    (is (= (hash-file "test_file")
+    (is (= (file-hash "test_file")
            "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")))
 
 (deftest t-complete-hash
@@ -53,7 +52,7 @@
   (testing "Reading 'first_index' fixture into a struct")
     (with-redefs [git-root (fn [] "test/fixture1/")]
       (is (= (read-index)
-             [ {:inode 0x2008ba, :device 0x81a4, :filesize 0x5,
+             [ {:inode 2099386, :device 16777218, :filesize 0x5,
                 :hash "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"
                 :name "test_file"
                 :ctime #inst "2016-01-22T19:21:34.000-00:00"
