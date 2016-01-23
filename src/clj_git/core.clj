@@ -7,10 +7,14 @@
 
 (defn to-str [x] (apply str (map char x)))
 
-(defn hash-blob
+(defn hash-str
   [text]
   (let [full-text (str "blob " (count text) "\0" text)]
     (sha-1-hex full-text)))
+
+(defn hash-file
+  [filepath]
+  nil)
 
 (defn git-root [] "./.git/")
 
@@ -157,6 +161,9 @@
 (defn file-mtime
   [filepath]
   (java.util.Date. (.lastModified (java.io.File. filepath))))
+
+; TODO: If times differ, compute hash to check for differences
+;   if not really different, update modified times back to index..?!
 
 (defn modified []
   (->> (read-index)
