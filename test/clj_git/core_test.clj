@@ -17,6 +17,14 @@
            "blob")))
   )
 
+(deftest t-zlib
+  (testing "compress->decompress 'hello'")
+    (is (= (seq (decompress-zlib (compress-zlib 
+                              (byte-array (map byte "hello")))))
+           (seq (byte-array (map byte "hello")))))
+  )
+
+
 (deftest t-hash-file
   (testing "Hash test_file")
     (is (= (hash-file "test_file")

@@ -1,5 +1,6 @@
 (ns clj-git.core
   (:use clj-message-digest.core)
+  (:use clojure.java.io)
   (:require [clojure.java.io :as io])
   (:gen-class))
 
@@ -34,6 +35,31 @@
     (.flush out)
     (.close out)
     (.toByteArray out)))
+
+(defn compress-zlib [data]
+  (let [buffer (byte-array (alength data))
+        out (java.io.ByteArrayOutputStream.)
+        in (java.util.zip.DeflaterInputStream. (java.io.ByteArrayInputStream. data)) ]
+    (loop [bytes-read 0]
+      (when-not (< bytes-read 0)
+        (.write out buffer 0 bytes-read)
+        (recur (.read in buffer))))
+    (.flush out)
+    (.close out)
+    (.toByteArray out)))
+
+; TODO: This should throw if file exists
+;   Even better, check that existing contents match..?
+(defn write-blob
+  [text]
+  (let [full-text (str "blob " (count text) "\0" text)
+        hash-text (hash-str text)
+        [d-name f-name] (map #(apply str %) (split-at 2 hash-text))
+        filepath (str (git-root) "objects/" d-name "/" f-name)
+        data (byte-array (map byte full-text))
+        bdata (compress-zlib data)]
+    (with-open [wrtr (output-stream filepath)]
+      (.write wrtr bdata))))
 
 (defn all-objects []
   (let [object-path (str (git-root) "objects/")
