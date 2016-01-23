@@ -111,7 +111,7 @@
 
 (defn validarte-index [] nil)
 
-;TODO Check validation works out to ensure correct parsing
+;TODO Check validation bits to ensure correct parsing
 
 (defn read-index []
   (let [to-num (fn [x] (->> x
@@ -130,12 +130,20 @@
                 name-len (mod (to-num (subvec vbs 0x3C 0x3E)) 4096)
                 name-bs (subvec vbs 0x3E (+ 0x3E name-len))
                 entry-len (+ 62 name-len)
-                zero-count (- 8 (mod entry-len 8))]
+                zero-count (- 8 (mod entry-len 8))
+                ctime-s (to-num (subvec vbs 0x00 0x04))
+                ctime-ns (to-num (subvec vbs 0x04 0x08))
+                mtime-s (to-num (subvec vbs 0x08 0x0C))
+                mtime-ns (to-num (subvec vbs 0x0C 0x10))]
             (list (drop (+ entry-len zero-count) bs)
                   {:inode (to-num (subvec vbs 0x14 0x18)),
                    :device (to-num (subvec vbs 0x18 0x1C)),
                    :filesize (to-num (subvec vbs 0x24 0x28)),
                    :name (to-str (map to-num name-bs)),
+                   :ctime (java.util.Date. (+ (* 1000 ctime-s) 
+                                              (/ ctime-ns 1000)))
+                   :mtime (java.util.Date. (+ (* 1000 mtime-s) 
+                                              (/ mtime-ns 1000)))
                    :hash (clojure.string/join (subvec vbs 0x28 0x3C))})))]
 
     (assert (= dirc "DIRC"))
@@ -145,4 +153,14 @@
       (if (= (count out) (dec file-count))
         (conj out e)
         (recur (f-entry r) (conj out e))))))
+
+(defn file-mtime
+  [filepath]
+  (java.util.Date. (.lastModified (java.io.File. filepath))))
+
+(defn modified []
+  (->> (read-index)
+       (map #(list (:name %) (:mtime %) (file-mtime (:name %))))
+       (filter #(.before (nth % 1) (nth % 2)))
+       (map first)))
 
