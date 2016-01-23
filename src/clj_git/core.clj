@@ -50,16 +50,20 @@
 
 ; TODO: This should throw if file exists
 ;   Even better, check that existing contents match..?
-(defn write-blob
-  [text]
-  (let [full-text (str "blob " (count text) "\0" text)
-        hash-text (hash-str text)
+(defn write-object
+  [full-text]
+  (let [hash-text (sha-1-hex full-text)
         [d-name f-name] (map #(apply str %) (split-at 2 hash-text))
         filepath (str (git-root) "objects/" d-name "/" f-name)
         data (byte-array (map byte full-text))
         bdata (compress-zlib data)]
+    (make-parents filepath)
     (with-open [wrtr (output-stream filepath)]
       (.write wrtr bdata))))
+
+(defn write-blob
+  [text]
+  (write-object (str "blob " (count text) "\0" text)))
 
 (defn store-file
   [filepath]
@@ -209,4 +213,6 @@
        (filter #(not= 0 (.compareTo (nth % 1) (nth % 2))))
        (map first)))
 
-(defn to-commit []) ;TODO; This
+(defn files-to-commit []) ;TODO; This
+
+
