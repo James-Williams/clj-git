@@ -199,6 +199,15 @@
   [filepath]
   (java.util.Date. (.lastModified (java.io.File. filepath))))
 
+(defn file-inode
+  [filepath]
+  (let [res (clojure.java.shell/sh "ls" "-i" filepath)
+        [out] (clojure.string/split (:out res) #" ")]
+    (assert (= 0 (:exit res)))
+    (assert (= "" (:err res)))
+    (read-string out)))
+
+
 ; TODO: If times differ, compute hash to check for differences
 ;   if not really different, update modified times back to index..?!
 
