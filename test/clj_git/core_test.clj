@@ -41,6 +41,7 @@
     (with-redefs [git-root (fn [] "test/fixture1/")]
       (is (= (read-index)
              [ {:inode 0x2008ba, :device 0x81a4, :filesize 0x5,
-                :hash "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"} ])))
+                :hash "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"
+                :name "test_file"}])))
     )
 

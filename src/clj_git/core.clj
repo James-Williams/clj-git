@@ -109,17 +109,40 @@
   (let [filepath (str (git-root) "refs/heads/" b)]
     (clojure.string/replace (slurp filepath) #"\n" "")))
 
+(defn validarte-index [] nil)
+
+;TODO Check validation works out to ensure correct parsing
+
 (defn read-index []
-  (let [filepath (str (git-root) "index")
-        bs (seq (read-file filepath))
-        hs (vec (map #(format "%02x" (mod % 256)) bs))
-        es (drop 12 bs)
-        to-num (fn [x] (->> x
-                           (clojure.string/join)
-                           (str "0x")
-                           (read-string)))]
-    [{:inode (to-num (subvec hs 0x20 0x24)),
-     :device (to-num (subvec hs 0x24 0x28)),
-     :filesize (to-num (subvec hs 0x30 0x34)),
-     :hash (clojure.string/join (subvec hs 0x34 0x48))}]))
+  (let [to-num (fn [x] (->> x
+                            (clojure.string/join)
+                            (str "0x")
+                            (read-string)))
+        filepath (str (git-root) "index")
+        xs (read-file filepath)
+        hs (vec (map #(format "%02x" (mod % 256)) xs))
+        header-len 12
+        dirc (to-str (subvec (vec xs) 0 4))
+        version (to-num (subvec hs 4 8))
+        file-count (to-num (subvec hs 8 12))
+        f-entry (fn [bs]
+          (let [vbs (vec bs)
+                name-len (mod (to-num (subvec vbs 0x3C 0x3E)) 4096)
+                name-bs (subvec vbs 0x3E (+ 0x3E name-len))
+                entry-len (+ 62 name-len)
+                zero-count (- 8 (mod entry-len 8))]
+            (list (drop (+ entry-len zero-count) bs)
+                  {:inode (to-num (subvec vbs 0x14 0x18)),
+                   :device (to-num (subvec vbs 0x18 0x1C)),
+                   :filesize (to-num (subvec vbs 0x24 0x28)),
+                   :name (to-str (map to-num name-bs)),
+                   :hash (clojure.string/join (subvec vbs 0x28 0x3C))})))]
+
+    (assert (= dirc "DIRC"))
+    (assert (= version 2))
+    (loop [[r e] (f-entry (drop header-len hs))
+           out []]
+      (if (= (count out) (dec file-count))
+        (conj out e)
+        (recur (f-entry r) (conj out e))))))
 
