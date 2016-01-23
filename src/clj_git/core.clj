@@ -61,6 +61,13 @@
     (with-open [wrtr (output-stream filepath)]
       (.write wrtr bdata))))
 
+(defn store-file
+  [filepath]
+  (let [text (slurp filepath)
+        hash-text (hash-str text)]
+    (write-blob text)
+    hash-text))
+
 (defn all-objects []
   (let [object-path (str (git-root) "objects/")
         pref-files (drop 1 (file-seq (clojure.java.io/file object-path)))
