@@ -67,19 +67,30 @@
 (deftest t-file-tree
   (testing "Build file tree structure from example file list")
     (is (= (files-tree ["test_file"
-                             "test/clj_git/core_test.clj"])
+                        "test/clj_git/core_test.clj"
+                        "test/clj_git/test"])
            {"test_file"
               {:type :file,
-               :parent nil},
+               :parent nil,
+               :children []},
+            "test/clj_git/test"
+              {:type :file,
+               :parent "test/clj_git",
+               :children []},
             "test"
-              {:type :dir
-               :parent nil},
+              {:type :dir,
+               :parent nil,
+               :children ["test/clj_git"]},
             "test/clj_git"
-              {:type :dir
-               :parent "test"},
+              {:type :dir,
+               :parent "test"
+               :children ["test/clj_git/core_test.clj"
+                          "test/clj_git/test"]},
             "test/clj_git/core_test.clj"
               {:type :file,
-               :parent "test/clj_git"}})))
+               :parent "test/clj_git",
+               :children []}}))
+)
 
 (deftest t-hash-tree
   (testing "Check that trees hash to original values")

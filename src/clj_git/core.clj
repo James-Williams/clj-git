@@ -311,5 +311,15 @@
 
 (defn files-tree
   [filepaths]
-  (reduce #(into %1 %2) {} (map build-file-tree filepaths)))
+  (let [objs (reduce #(into %1 %2) {} (map build-file-tree filepaths))
+        find-children (fn [p]
+                        (->> objs
+                             (filter #(= p (:parent (second %))))
+                             (map first)))]
+    (reduce (fn [x y]
+           (assoc x y (assoc
+                        (get x y)
+                        :children
+                        (find-children y)))
+           ) objs (keys objs))))
 
