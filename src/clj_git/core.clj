@@ -243,3 +243,24 @@
      :mtime (file-mtime fp),
      :hash (file-hash fp)}))
 
+(defn positions
+  [pred coll]
+  (keep-indexed (fn [idx x]
+                  (when (pred x)
+                    idx))
+                coll))
+
+(defn build-file-tree
+  [filepath]
+  (let [indexes (positions #(= \/ %) filepath)
+        dirs (map #(apply str (take % filepath)) indexes)
+        f-parent (fn [x] (second (re-matches #"(.*)/[^/]+" x)))
+        dirs-map (reduce #(assoc %1 %2
+            {:type :dir, :parent (f-parent %2)}) {} dirs)]
+    (assoc dirs-map filepath
+           {:type :file, :parent (f-parent filepath)})))
+
+(defn files-tree
+  [filepaths]
+  (reduce #(into %1 %2) {} (map build-file-tree filepaths)))
+

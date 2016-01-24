@@ -59,3 +59,22 @@
                 :mtime #inst "2016-01-22T19:21:34.000-00:00"}])))
     )
 
+(deftest t-file-tree
+  (testing "Build file tree structure from example file list")
+    (is (= (files-tree ["test_file"
+                             "test/clj_git/core_test.clj"])
+           {"test_file"
+              {:type :file,
+               :parent nil},
+            "test"
+              {:type :dir
+               :parent nil},
+            "test/clj_git"
+              {:type :dir
+               :parent "test"},
+            "test/clj_git/core_test.clj"
+              {:type :file,
+               :parent "test/clj_git"}})))
+
+                              
+
