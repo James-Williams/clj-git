@@ -15,6 +15,27 @@
 
 (defn to-str [x] (apply str (map char x)))
 
+(defn ok-sh
+  [command & args]
+  (let [res (apply sh (cons command args))]
+    (assert (= 0 (:exit res)))
+    (assert (= "" (:err res)))
+    (:out res)))
+
+(defn set-writable
+  [filepath]
+  (ok-sh "chmod" "u+w" filepath))
+
+(defn unset-writable
+  [filepath]
+  (ok-sh "chmod" "u-w" filepath))
+
+(defn file-dev-inode
+  [filepath]
+  (let [out (ok-sh "stat" filepath)
+        [dev inode] (clojure.string/split out #" ")]
+    (list (read-string dev) (read-string inode))))
+
 (defn hash-str
   [text]
   (let [full-text (str "blob " (count text) "\0" text)]
@@ -51,8 +72,6 @@
     (.close out)
     (.toByteArray out)))
 
-; TODO: This should throw if file exists
-;   Even better, check that existing contents match..?
 (defn write-object
   [full-text]
   (let [hash-text (sha-1-hex full-text)
@@ -61,19 +80,20 @@
         data (byte-array (map byte full-text))
         bdata (compress-zlib data)]
     (make-parents filepath)
-    (with-open [wrtr (output-stream filepath)]
-      (.write wrtr bdata))))
+    (if (not (.exists (clojure.java.io/as-file filepath)))
+      (do
+        (with-open [wrtr (output-stream filepath)]
+          (.write wrtr bdata))
+        (unset-writable filepath)))
+    hash-text))
 
 (defn write-blob
   [text]
   (write-object (str "blob " (count text) "\0" text)))
 
-(defn store-file
+(defn hash-file
   [filepath]
-  (let [text (slurp filepath)
-        hash-text (hash-str text)]
-    (write-blob text)
-    hash-text))
+  (hash-str (slurp filepath)))
 
 (defn all-objects []
   (let [object-path (str (git-root) "objects/")
@@ -202,21 +222,9 @@
   [filepath]
   (java.util.Date. (.lastModified (java.io.File. filepath))))
 
-(defn file-dev-inode
-  [filepath]
-  (let [res (sh "stat" filepath)
-        [dev inode] (clojure.string/split (:out res) #" ")]
-    (assert (= 0 (:exit res)))
-    (assert (= "" (:err res)))
-    (list (read-string dev) (read-string inode))))
-
 (defn file-size
   [filepath]
   (.length (clojure.java.io/file filepath)))
-
-(defn file-hash
-  [filepath]
-  (hash-str (slurp filepath)))
 
 ; TODO: If times differ, compute hash to check for differences
 ;   if not really different, update modified times back to index..?!
@@ -241,7 +249,7 @@
      :name fp,
      :ctime (file-mtime fp),
      :mtime (file-mtime fp),
-     :hash (file-hash fp)}))
+     :hash (hash-file fp)}))
 
 (defn positions
   [pred coll]
