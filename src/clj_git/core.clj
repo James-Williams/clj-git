@@ -7,6 +7,12 @@
 
 (def SHA-1-HEX-LENGTH 40)
 
+(declare modified)
+(defn -main [& args]
+  (println "Unstaged Changes:")
+  (doseq [x (modified)]
+    (println (str "  " x))))
+
 (defn to-str [x] (apply str (map char x)))
 
 (defn hash-str
