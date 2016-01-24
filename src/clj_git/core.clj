@@ -95,6 +95,46 @@
   [filepath]
   (hash-str (slurp filepath)))
 
+;TODO: Use flags from entry hash-map
+(defn tree-entry-bytes
+  [entry]
+  (let [flags-bs (if (= (:type entry) "tree")
+                        '(52 48 48 48 48)
+                        '(49 48 48 54 52 52))
+        name-bs (->> (:name entry)
+                     (map byte)
+                     (byte-array)
+                     (seq))
+        hash-bs (->> (:hash entry)
+                    (partition 2)
+                    (map #(apply str %))
+                    (map #(str "0x" %))
+                    (map read-string)
+                    (byte-array)
+                    (seq))]
+    (concat flags-bs
+            '(32)
+            name-bs
+            '(00)
+            hash-bs)))
+
+(defn tree-data
+  [tree-struct]
+  (let [body (apply concat (map tree-entry-bytes tree-struct))
+        size-bs (map byte (str (count body)))
+        tree-str-bs (map byte "tree ")
+        header-bs (concat tree-str-bs size-bs '(0))
+        data (concat header-bs body)
+        ]
+    data))
+
+(defn hash-tree
+  [tree-struct]
+  (->> tree-struct
+       (tree-data)
+       (byte-array)
+       (sha-1-hex)))
+
 (defn all-objects []
   (let [object-path (str (git-root) "objects/")
         pref-files (drop 1 (file-seq (clojure.java.io/file object-path)))

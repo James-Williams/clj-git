@@ -81,5 +81,14 @@
               {:type :file,
                :parent "test/clj_git"}})))
 
+(deftest t-hash-tree
+  (testing "Check that trees hash to original values")
+    (is (= (hash-tree (tree "6811239b02050711578e223ffe1c297a0eb801f4"))
+           "6811239b02050711578e223ffe1c297a0eb801f4"))
+  (testing "Check that trees hash to original values")
+    (is (= (hash-tree (tree "ca93"))
+           "ca93b49848670d03b3968c8a481eca55f5fb2150"))
+)
+
                               
 
