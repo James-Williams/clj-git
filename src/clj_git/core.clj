@@ -180,7 +180,7 @@
 
 (defn tree
   [h]
-  (let [[_ ins] (read-object h)
+  (let [[header ins] (read-object h)
         f-entry (fn [bs]
                   (let [spacex (.indexOf bs (int \space))
                         flags (take spacex bs)
@@ -199,6 +199,7 @@
                             :flags (to-str flags)
                             :type obj-type
                             :hash hash-str}  nxt-entry)))]
+    (assert (= "tree" (apply str (take 4 (map char header)))))
     (loop [[e r] (f-entry ins) out []]
       (if (empty? r)
         (conj out e)
