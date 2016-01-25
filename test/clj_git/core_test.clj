@@ -104,5 +104,12 @@
            "ca93b49848670d03b3968c8a481eca55f5fb2150"))
 )
 
+(deftest t-build-tree-blob-list
+  (testing "Check correct hash for single file index")
+  (with-redefs [git-root (fn [] "test/fixture1/")]
+    (is (= (first (build-tree-blob-list (read-index)))
+           "ca93b49848670d03b3968c8a481eca55f5fb2150")))
+)
+
                               
 
