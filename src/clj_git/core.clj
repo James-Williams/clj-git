@@ -300,18 +300,21 @@
                 coll))
 
 (defn build-file-tree
-  [filepath]
-  (let [indexes (positions #(= \/ %) filepath)
+  [file-entry]
+  (let [filepath (:name file-entry)
+        indexes (positions #(= \/ %) filepath)
         dirs (map #(apply str (take % filepath)) indexes)
         f-parent (fn [x] (second (re-matches #"(.*)/[^/]+" x)))
         dirs-map (reduce #(assoc %1 %2
             {:type :dir, :parent (f-parent %2)}) {} dirs)]
     (assoc dirs-map filepath
-           {:type :file, :parent (f-parent filepath)})))
+           (dissoc
+             (into file-entry {:type :file, :parent (f-parent filepath)})
+             :name))))
 
 (defn files-tree
-  [filepaths]
-  (let [objs (reduce #(into %1 %2) {} (map build-file-tree filepaths))
+  [file-entries]
+  (let [objs (reduce #(into %1 %2) {} (map build-file-tree file-entries))
         find-children (fn [p]
                         (->> objs
                              (filter #(= p (:parent (second %))))
@@ -323,3 +326,35 @@
                         (find-children y)))
            ) objs (keys objs))))
 
+;TODO Lookup real flags from index!
+(defn build-tree-step
+"Returns '(tree-hash, list of tree objects) for items in file-tree"
+  [items file-tree]
+  (let [find-children (fn [p]
+                        (->> file-tree
+                             (filter #(nil? (:parent (second p))))
+                             (map first)))
+        f-item (fn [item]
+                 (let [obj (get file-tree item)]
+                   (if (= :dir (:type obj))
+                     (let [[h es] (build-tree-step
+                                   (:children obj)
+                                   file-tree)]
+                       (conj es {:name item
+                        :type "tree"
+                        :flags "040000"
+                        :hash h}))
+                     (list {:name item
+                      :type "blob"
+                      :flags "100644"
+                      :hash (:hash obj)}))))
+        tree-entries (apply concat (map f-item items))
+        tree-hash (hash-tree tree-entries)]
+    (list tree-hash tree-entries)))
+
+(defn build-tree-blob-list
+  [file-tree]
+  (let [top-files (->> file-tree
+                       (filter #(nil? (:parent (second %))))
+                       (map first))]
+    (build-tree-step top-files file-tree)))
