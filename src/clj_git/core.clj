@@ -15,29 +15,24 @@
 
 (defn to-str [x] (apply str (map char x)))
 
-(defn ok-sh
-  [command & args]
+(defn ok-sh [command & args]
   (let [res (apply sh (cons command args))]
     (assert (= 0 (:exit res)))
     (assert (= "" (:err res)))
     (:out res)))
 
-(defn set-writable
-  [filepath]
+(defn set-writable [filepath]
   (ok-sh "chmod" "u+w" filepath))
 
-(defn unset-writable
-  [filepath]
+(defn unset-writable [filepath]
   (ok-sh "chmod" "u-w" filepath))
 
-(defn file-dev-inode
-  [filepath]
+(defn file-dev-inode [filepath]
   (let [out (ok-sh "stat" filepath)
         [dev inode] (clojure.string/split out #" ")]
     (list (read-string dev) (read-string inode))))
 
-(defn hash-str
-  [text]
+(defn hash-str [text]
   (let [full-text (str "blob " (count text) "\0" text)]
     (sha-1-hex full-text)))
 
@@ -72,8 +67,7 @@
     (.close out)
     (.toByteArray out)))
 
-(defn write-object
-  [full-text]
+(defn write-object [full-text]
   (let [hash-text (sha-1-hex full-text)
         [d-name f-name] (map #(apply str %) (split-at 2 hash-text))
         filepath (str (git-root) "objects/" d-name "/" f-name)
@@ -87,17 +81,14 @@
         (unset-writable filepath)))
     hash-text))
 
-(defn write-blob
-  [text]
+(defn write-blob [text]
   (write-object (str "blob " (count text) "\0" text)))
 
-(defn hash-file
-  [filepath]
+(defn hash-file [filepath]
   (hash-str (slurp filepath)))
 
 ;TODO: Use flags from entry hash-map
-(defn tree-entry-bytes
-  [entry]
+(defn tree-entry-bytes [entry]
   (let [flags-bs (if (= (:type entry) "tree")
                         '(52 48 48 48 48)
                         '(49 48 48 54 52 52))
@@ -118,8 +109,7 @@
             '(00)
             hash-bs)))
 
-(defn tree-data
-  [tree-struct]
+(defn tree-data [tree-struct]
   (let [body (apply concat (map tree-entry-bytes tree-struct))
         size-bs (map byte (str (count body)))
         tree-str-bs (map byte "tree ")
@@ -128,8 +118,7 @@
         ]
     data))
 
-(defn hash-tree
-  [tree-struct]
+(defn hash-tree [tree-struct]
   (->> tree-struct
        (tree-data)
        (byte-array)
@@ -144,8 +133,7 @@
         
     (map #(do (assert (= (count %) SHA-1-HEX-LENGTH)) %) hashes)))
 
-(defn complete-hash
-  [hash-prefix]
+(defn complete-hash [hash-prefix]
   (assert (<= (count hash-prefix) SHA-1-HEX-LENGTH))
   (let [len (count hash-prefix)
         all (all-objects)
@@ -161,8 +149,7 @@
                (str "Ambiguous object prefix '" hash-prefix "'")))
       :else (second (first matches)))))
 
-(defn read-object
-  [hash-prefix]
+(defn read-object [hash-prefix]
   (let [hash-hex (complete-hash hash-prefix)
         filepath (str (git-root) 
                       "objects/"
@@ -173,13 +160,11 @@
         (assert (> ix 0))
         (split-at ix bs)))
 
-(defn object-type
-  [hash-hex]
+(defn object-type [hash-hex]
   (let [header (to-str (first (read-object hash-hex)))]
     (first (clojure.string/split header #" "))))
 
-(defn tree
-  [h]
+(defn tree [h]
   (let [[header ins] (read-object h)
         f-entry (fn [bs]
                   (let [spacex (.indexOf bs (int \space))
@@ -205,12 +190,10 @@
         (conj out e)
         (recur (f-entry r) (conj out e))))))
 
-(defn blob
-  [hash-hex]
+(defn blob [hash-hex]
   (to-str (second (read-object hash-hex))))
 
-(defn branch
-  [b]
+(defn branch [b]
   (let [filepath (str (git-root) "refs/heads/" b)]
     (clojure.string/replace (slurp filepath) #"\n" "")))
 
@@ -259,12 +242,10 @@
         (conj out e)
         (recur (f-entry r) (conj out e))))))
 
-(defn file-mtime
-  [filepath]
+(defn file-mtime [filepath]
   (java.util.Date. (.lastModified (java.io.File. filepath))))
 
-(defn file-size
-  [filepath]
+(defn file-size [filepath]
   (.length (clojure.java.io/file filepath)))
 
 ; TODO: If times differ, compute hash to check for differences
@@ -281,8 +262,7 @@
 
 (defn files-to-commit []) ;TODO; This
 
-(defn file-index-entry
-  [fp]
+(defn file-index-entry [fp]
   (let [[device inode] (file-dev-inode fp)]
     {:inode inode,
      :device device,
@@ -292,15 +272,13 @@
      :mtime (file-mtime fp),
      :hash (hash-file fp)}))
 
-(defn positions
-  [pred coll]
+(defn positions [pred coll]
   (keep-indexed (fn [idx x]
                   (when (pred x)
                     idx))
                 coll))
 
-(defn build-file-tree
-  [file-entry]
+(defn build-file-tree [file-entry]
   (let [filepath (:name file-entry)
         indexes (positions #(= \/ %) filepath)
         dirs (map #(apply str (take % filepath)) indexes)
@@ -312,8 +290,7 @@
              (into file-entry {:type :file, :parent (f-parent filepath)})
              :name))))
 
-(defn files-tree
-  [file-entries]
+(defn files-tree [file-entries]
   (let [objs (reduce #(into %1 %2) {} (map build-file-tree file-entries))
         find-children (fn [p]
                         (->> objs
