@@ -319,30 +319,41 @@
                                  (last (clojure.string/split
                                         (:fname x) #"\/"))))
                         ordered)
-        tree-objs (map (fn [x]
-                         (if (= (:type x) :file)
-                           (-> x
-                               (assoc :type "blob")
-                               (assoc :flags "100644"))
-                           (-> x
-                               (assoc :type "tree")
-                               (assoc :flags "40000"))))
-                       with-names)
-        f-children (fn [objs x]
-                     (filter #(= (:parent %) (:fname x)) objs))
+        blob-objs (->> with-names
+                       (filter #(= (:type %) :file))
+                       (map #(-> %
+                                 (assoc :type "blob")
+                                 (assoc :flags "100644"))))
+        dir-objs (->> with-names
+                       (filter #(= (:type %) :dir))
+                       (map #(-> %
+                                 (assoc :type "tree")
+                                 (assoc :flags "40000"))))
+        f-children (fn [ds x]
+                     (map #(select-keys % [:name
+                                           :type
+                                           :hash
+                                           :flags])
+                          (filter #(= (:parent %) (:fname x))
+                                  (concat blob-objs ds))))
         with-hashes (reduce (fn [objs x]
                           (conj objs
-                           (if (= (:type x) "tree")
                              (assoc x :hash
                                     (hash-tree (f-children objs x)))
-                             x))) [] tree-objs)
-        top-hash (hash-tree (f-children with-hashes nil))]
-    (list top-hash with-hashes)))
+                             )) [] dir-objs)
+        tree-objs (map (fn [x]
+                         {:object-type :tree
+                          :contents (f-children with-hashes x)}) 
+                       with-hashes)
+        top-children (f-children with-hashes nil)
+        top-tree-obj {:object-type :tree
+                      :contents top-children}]
+    (list (hash-tree top-children) (conj tree-objs top-tree-obj))))
 
 (defn index-to-tree-objects []
   (let [index-files (read-index)
         files-map (files-tree index-files)
-        objs (files-map-to-objs files-map)]
-    objs))
+        [top-hash objs] (files-map-to-objs files-map)]
+    [top-hash objs]))
 
 
