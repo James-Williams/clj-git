@@ -99,8 +99,29 @@
   (testing "Check that trees hash to original values")
     (is (= (hash-tree (tree "6811239b02050711578e223ffe1c297a0eb801f4"))
            "6811239b02050711578e223ffe1c297a0eb801f4"))
+  (testing "Top level tree entry with both blob and tree children")
+    (is (= (hash-tree (tree "4b90f754d0ddf46643fb5250b47cddfb43102f30"))
+           "4b90f754d0ddf46643fb5250b47cddfb43102f30"))
+  (testing "Reversing object list has no effect")
+    (is (= (hash-tree (reverse
+                        (tree "4b90f754d0ddf46643fb5250b47cddfb43102f30")))
+           "4b90f754d0ddf46643fb5250b47cddfb43102f30"))
   (testing "Check that trees hash to original values")
     (is (= (hash-tree (tree "ca93"))
            "ca93b49848670d03b3968c8a481eca55f5fb2150"))
 )
 
+(deftest t-index-to-tree-objects
+  (testing "fixture1 index hash the correct top level hash")
+  (with-redefs [git-root (fn [] "test/fixture1/")]
+    (is (= (first (index-to-tree-objects))
+           "ca93b49848670d03b3968c8a481eca55f5fb2150")))
+  (testing "fixture2 index hash the correct top level hash")
+  (with-redefs [git-root (fn [] "test/fixture2/")]
+    (is (= (first (index-to-tree-objects))
+           "40951cd74421289606500f35d0c6ccb50b552b4b")))
+  (testing "fixture3 index hash the correct top level hash")
+  (with-redefs [git-root (fn [] "test/fixture3/")]
+    (is (= (first (index-to-tree-objects))
+           "4b90f754d0ddf46643fb5250b47cddfb43102f30")))
+)
