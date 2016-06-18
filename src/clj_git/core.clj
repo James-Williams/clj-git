@@ -85,7 +85,7 @@
         (with-open [wrtr (output-stream filepath)]
           (.write wrtr bdata))
         (unset-writable filepath)))
-    filepath))
+    hash-text))
 
 (defn write-blob [text]
   (write-object (str "blob " (count text) "\0" text)))
