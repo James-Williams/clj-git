@@ -15,6 +15,9 @@
 
 (defn to-str [x] (apply str (map char x)))
 
+(defn current-unix-time []
+  (quot (System/currentTimeMillis) 1000))
+
 (defn ok-sh [command & args]
   (let [res (apply sh (cons command args))]
     (assert (= 0 (:exit res)))
@@ -37,6 +40,9 @@
     (sha-1-hex full-text)))
 
 (defn git-root [] "./.git/")
+
+(defn get-author [] "j <jamie.williams89@gmail.com>")
+(def  get-committer get-author)
 
 (defn read-file [path]
   (with-open [out (java.io.ByteArrayOutputStream.)]
@@ -67,11 +73,11 @@
     (.close out)
     (.toByteArray out)))
 
-(defn write-object [full-text]
-  (let [hash-text (sha-1-hex full-text)
+(defn write-object [bs]
+  (let [hash-text (sha-1-hex bs)
         [d-name f-name] (map #(apply str %) (split-at 2 hash-text))
         filepath (str (git-root) "objects/" d-name "/" f-name)
-        data (byte-array (map byte full-text))
+        data (byte-array (map byte bs))
         bdata (compress-zlib data)]
     (make-parents filepath)
     (if (not (.exists (clojure.java.io/as-file filepath)))
@@ -79,10 +85,19 @@
         (with-open [wrtr (output-stream filepath)]
           (.write wrtr bdata))
         (unset-writable filepath)))
-    hash-text))
+    filepath))
+
+(defn write-tree [tree-struct]
+  (-> tree-struct
+      (tree-data)
+      (byte-array)
+      (write-object)))
 
 (defn write-blob [text]
   (write-object (str "blob " (count text) "\0" text)))
+
+(defn write-commit [text]
+  (write-object (str "commit " (count text) "\0" text)))
 
 (defn hash-file [filepath]
   (hash-str (slurp filepath)))
@@ -199,6 +214,12 @@
 (defn branch [b]
   (let [filepath (str (git-root) "refs/heads/" b)]
     (clojure.string/replace (slurp filepath) #"\n" "")))
+
+(defn head []
+  (let [filepath (str (git-root) "HEAD")
+        full-branch (clojure.string/replace (slurp filepath) #"\n" "")
+        branch-name (-> full-branch (clojure.string/split #"\/") (last))]
+    (branch branch-name)))
 
 (defn validarte-index [] nil)
 
@@ -358,4 +379,16 @@
         [top-hash objs] (files-map-to-objs files-map)]
     [top-hash objs]))
 
-
+; Creates a new commit object (and all required tree objects)
+; from the current index
+(defn create-commit [message parent-hash]
+  (let [[tree-hash tree-structs] (index-to-tree-objects)
+        timestamp (str (current-unix-time) " +0000")
+        text (str "tree " tree-hash "\n"
+                  "parent " parent-hash "\n"
+                  "author " (get-author) " " timestamp "\n"
+                  "committer " (get-committer) " " timestamp "\n"
+                  "\n"
+                  message "\n")]
+    (doseq [e tree-structs] (write-tree (:contents e)))
+    (write-commit text)))
