@@ -87,12 +87,6 @@
         (unset-writable filepath)))
     filepath))
 
-(defn write-tree [tree-struct]
-  (-> tree-struct
-      (tree-data)
-      (byte-array)
-      (write-object)))
-
 (defn write-blob [text]
   (write-object (str "blob " (count text) "\0" text)))
 
@@ -133,6 +127,12 @@
         data (concat header-bs body)
         ]
     data))
+
+(defn write-tree [tree-struct]
+  (-> tree-struct
+      (tree-data)
+      (byte-array)
+      (write-object)))
 
 (defn hash-tree [tree-struct]
   (->> tree-struct
@@ -206,10 +206,10 @@
         (conj out e)
         (recur (f-entry r) (conj out e))))))
 
-(def commit blob)
-
 (defn blob [hash-hex]
   (to-str (second (read-object hash-hex))))
+
+(def commit blob)
 
 (defn branch [b]
   (let [filepath (str (git-root) "refs/heads/" b)]
@@ -381,9 +381,10 @@
 
 ; Creates a new commit object (and all required tree objects)
 ; from the current index
+; TODO: Update the index, HEAD and branch after creating objects!
 (defn create-commit [message parent-hash]
   (let [[tree-hash tree-structs] (index-to-tree-objects)
-        timestamp (str (current-unix-time) " +0000")
+        timestamp (str (current-unix-time) " +0000") ; TODO: Use current timezone
         text (str "tree " tree-hash "\n"
                   "parent " parent-hash "\n"
                   "author " (get-author) " " timestamp "\n"
@@ -392,3 +393,4 @@
                   message "\n")]
     (doseq [e tree-structs] (write-tree (:contents e)))
     (write-commit text)))
+
