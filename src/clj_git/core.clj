@@ -191,6 +191,8 @@
         (conj out e)
         (recur (f-entry r) (conj out e))))))
 
+(def commit blob)
+
 (defn blob [hash-hex]
   (to-str (second (read-object hash-hex))))
 
