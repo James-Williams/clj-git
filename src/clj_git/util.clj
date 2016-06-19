@@ -16,4 +16,13 @@
 (defn unset-writable [filepath]
   (ok-sh "chmod" "u-w" filepath))
 
+(defn read-file [path]
+  (with-open [out (java.io.ByteArrayOutputStream.)]
+    (clojure.java.io/copy (clojure.java.io/input-stream path) out)
+    (.toByteArray out)))
+
 (defn to-str [x] (apply str (map char x)))
+
+(defn current-unix-time []
+  (quot (System/currentTimeMillis) 1000))
+

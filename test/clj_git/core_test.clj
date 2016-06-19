@@ -3,6 +3,7 @@
             [clj-git.util :refer :all]
             [clj-git.repo :refer :all]
             [clj-git.object :refer :all]
+            [clj-git.index :refer :all]
             [clj-git.core :refer :all]))
 
 (deftest t-hash-str

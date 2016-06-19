@@ -13,11 +13,6 @@
   (let [full-text (str "blob " (count text) "\0" text)]
     (sha-1-hex full-text)))
 
-(defn read-file [path]
-  (with-open [out (java.io.ByteArrayOutputStream.)]
-    (clojure.java.io/copy (clojure.java.io/input-stream path) out)
-    (.toByteArray out)))
-
 (defn decompress-zlib [data]
   (let [buffer (byte-array (alength data))
         out (java.io.ByteArrayOutputStream.)
