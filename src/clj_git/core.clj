@@ -25,14 +25,17 @@
 ; Creates a new commit object (and all required tree objects)
 ; from the current index
 ; TODO: Update the index, HEAD and branch after creating objects!
-(defn create-commit [message parent-hash]
-  (let [[tree-hash tree-structs] (index-to-tree-objects)
-        timestamp (str (current-unix-time) " +0000") ; TODO: Use current timezone
-        text (str "tree " tree-hash "\n"
-                  "parent " parent-hash "\n"
-                  "author " (get-author) " " timestamp "\n"
-                  "committer " (get-committer) " " timestamp "\n"
-                  "\n"
-                  message "\n")]
-    (doseq [e tree-structs] (write-tree (:contents e)))
-    (write-commit text)))
+(defn create-commit
+  ( [message]
+    (create-commit message (head)))
+  ( [message parent-hash]
+    (let [[tree-hash tree-structs] (index-to-tree-objects)
+          timestamp (str (current-unix-time) " +0000") ; TODO: Use current timezone
+          text (str "tree " tree-hash "\n"
+                    "parent " parent-hash "\n"
+                    "author " (get-author) " " timestamp "\n"
+                    "committer " (get-committer) " " timestamp "\n"
+                    "\n"
+                    message "\n")]
+      (doseq [e tree-structs] (write-tree (:contents e)))
+      (write-commit text))))
