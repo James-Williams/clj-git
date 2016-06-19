@@ -1,11 +1,8 @@
 (ns clj-git.index
-  (:use clojure.java.io)
-  (:use clojure.java.shell)
   (:use clj-git.util)
   (:use clj-git.repo)
   (:use clj-git.file)
   (:use clj-git.object)
-  (:require [clojure.java.io :as io])
   (:gen-class))
 
 ;TODO Check validation bits to ensure correct parsing

@@ -1,7 +1,4 @@
 (ns clj-git.repo
-  (:use clojure.java.io)
-  (:use clojure.java.shell)
-  (:require [clojure.java.io :as io])
   (:gen-class))
 
 (defn git-root [] "./.git/")

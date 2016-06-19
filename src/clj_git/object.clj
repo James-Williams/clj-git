@@ -1,10 +1,8 @@
 (ns clj-git.object
   (:use clj-message-digest.core)
   (:use clojure.java.io)
-  (:use clojure.java.shell)
   (:use clj-git.util)
   (:use clj-git.repo)
-  (:require [clojure.java.io :as io])
   (:gen-class))
 
 (def SHA-1-HEX-LENGTH 40)

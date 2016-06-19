@@ -1,13 +1,9 @@
 (ns clj-git.core
-  (:use clj-message-digest.core)
-  (:use clojure.java.io)
-  (:use clojure.java.shell)
   (:use clj-git.util)
   (:use clj-git.repo)
   (:use clj-git.file)
   (:use clj-git.object)
   (:use clj-git.index)
-  (:require [clojure.java.io :as io])
   (:gen-class))
 
 (declare modified)
@@ -18,9 +14,7 @@
 
 ; TODO: If times differ, compute hash to check for differences
 ;   if not really different, update modified times back to index..?!
-
 ; TODO: If times match, also check filesize
-
 ; TODO: If times differ, double-check size then hash..
 (defn modified []
   (->> (read-index)

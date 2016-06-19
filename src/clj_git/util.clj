@@ -1,7 +1,5 @@
 (ns clj-git.util
-  (:use clojure.java.io)
   (:use clojure.java.shell)
-  (:require [clojure.java.io :as io])
   (:gen-class))
 
 (defn ok-sh [command & args]

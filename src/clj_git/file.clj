@@ -1,8 +1,5 @@
 (ns clj-git.file
-  (:use clojure.java.io)
-  (:use clojure.java.shell)
   (:use clj-git.util)
-  (:require [clojure.java.io :as io])
   (:gen-class))
 
 (defn file-dev-inode [filepath]
