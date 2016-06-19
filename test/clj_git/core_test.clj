@@ -1,5 +1,8 @@
 (ns clj-git.core-test
   (:require [clojure.test :refer :all]
+            [clj-git.util :refer :all]
+            [clj-git.repo :refer :all]
+            [clj-git.object :refer :all]
             [clj-git.core :refer :all]))
 
 (deftest t-hash-str
