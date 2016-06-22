@@ -15,9 +15,6 @@
                 :mtime #inst "2016-01-22T19:21:34.000-00:00"}])))
     )
 
-; TODO: Move this into util.clj and use in other places..
-(def byte-seq #(->> % .toByteArray (map (fn [x] (mod x 256))) vec))
-
 (deftest t-build-index
   (testing "Single file index is correctly constructed")
   (is (= (byte-seq (build-index

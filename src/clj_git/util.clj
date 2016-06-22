@@ -42,3 +42,6 @@
   (let [hex-strs (map #(apply str %) (partition 2 hex-str))
         hex-bs (map #(read-string (str "0x" %)) hex-strs)]
     hex-bs))
+
+(def byte-seq #(->> % .toByteArray (map (fn [x] (mod x 256))) vec))
+
