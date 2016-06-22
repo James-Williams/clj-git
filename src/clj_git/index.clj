@@ -1,5 +1,6 @@
 (ns clj-git.index
   (:use clj-message-digest.core)
+  (:use clojure.java.io)
   (:use clj-git.util)
   (:use clj-git.repo)
   (:use clj-git.file)
@@ -42,6 +43,13 @@
             (wchars (hex-bytes (sha-1-hex (byte-array (.toByteArray out)))))
           ))
     out))
+
+(defn write-index
+  ( [index-struct] (write-index index-struct (str (git-root) "index")))
+  ( [index-struct filepath]
+    (with-open [wrtr (output-stream filepath)]
+      (doseq [b (byte-seq (build-index index-struct))]
+        (.write wrtr b)))))
 
 ;TODO Check validation bits to ensure correct parsing
 (defn read-index
