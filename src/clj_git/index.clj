@@ -40,8 +40,8 @@
                )
             bs-padded (concat bs (repeat (- 8 (mod (count bs) 8)) 0))]
             (wchars bs-padded)
-            (wchars (hex-bytes (sha-1-hex (byte-array (.toByteArray out)))))
           ))
+    (wchars (hex-bytes (sha-1-hex (byte-array (.toByteArray out)))))
     out))
 
 (defn write-index

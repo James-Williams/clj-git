@@ -1,5 +1,6 @@
 (ns clj-git.index-test
   (:require [clojure.test :refer :all]
+            [clojure.pprint :refer :all]
             [clj-git.util :refer :all]
             [clj-git.repo :refer :all]
             [clj-git.index :refer :all]))
@@ -26,6 +27,15 @@
               :mtime #inst "2016-06-22T09:29:27.000-00:00",
               :hash "2d55082916969610e3c65cec1fc04766208f39d4"} ]))
           (byte-seq (read-file "test/fixture_one_file/index")))))
+
+(deftest t-build-index
+  (testing "Build then Read an index produces the input index data"
+    (doseq [filepath ["test/fixture1/index"
+                      "test/fixture2/index"
+                      "test/fixture3/index"] ]
+      (let [index-struct (read-index (read-file filepath))]
+        (is (= (-> index-struct build-index read-index)
+               index-struct))))))
 
 (deftest t-file-tree
   (testing "Build file tree structure from example file list")
