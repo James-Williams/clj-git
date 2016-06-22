@@ -1,5 +1,6 @@
 (ns clj-git.index-test
   (:require [clojure.test :refer :all]
+            [clj-git.util :refer :all]
             [clj-git.repo :refer :all]
             [clj-git.index :refer :all]))
 
@@ -13,6 +14,21 @@
                 :ctime #inst "2016-01-22T19:21:34.000-00:00"
                 :mtime #inst "2016-01-22T19:21:34.000-00:00"}])))
     )
+
+; TODO: Move this into util.clj and use in other places..
+(def byte-seq #(->> % .toByteArray (map (fn [x] (mod x 256))) vec))
+
+(deftest t-build-index
+  (testing "Single file index is correctly constructed")
+  (is (= (byte-seq (build-index
+          [ { :inode 1529592,
+              :device 16777220,
+              :filesize 16,
+              :name "test_file",
+              :ctime #inst "2016-06-22T09:29:27.000-00:00",
+              :mtime #inst "2016-06-22T09:29:27.000-00:00",
+              :hash "2d55082916969610e3c65cec1fc04766208f39d4"} ]))
+          (byte-seq (read-file "test/fixture_one_file/index")))))
 
 (deftest t-file-tree
   (testing "Build file tree structure from example file list")

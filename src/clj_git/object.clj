@@ -133,7 +133,7 @@
                       "objects/"
                       (subs hash-hex 0 2) "/" 
                       (subs hash-hex 2 (count hash-hex)))
-        bs (seq (decompress-zlib (read-file filepath)))
+        bs (-> filepath read-file .toByteArray decompress-zlib seq)
         ix (inc (.indexOf bs (byte 0)))]
         (assert (> ix 0))
         (split-at ix bs)))

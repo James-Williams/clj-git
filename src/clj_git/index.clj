@@ -1,51 +1,90 @@
 (ns clj-git.index
+  (:use clj-message-digest.core)
   (:use clj-git.util)
   (:use clj-git.repo)
   (:use clj-git.file)
   (:use clj-git.object)
   (:gen-class))
 
-;TODO Check validation bits to ensure correct parsing
-(defn read-index []
-  (let [to-num (fn [x] (->> x
-                            (clojure.string/join)
-                            (str "0x")
-                            (read-string)))
-        filepath (str (git-root) "index")
-        xs (read-file filepath)
-        hs (vec (map #(format "%02x" (mod % 256)) xs))
-        header-len 12
-        dirc (to-str (subvec (vec xs) 0 4))
-        version (to-num (subvec hs 4 8))
-        file-count (to-num (subvec hs 8 12))
-        f-entry (fn [bs]
-          (let [vbs (vec bs)
-                name-len (mod (to-num (subvec vbs 0x3C 0x3E)) 4096)
-                name-bs (subvec vbs 0x3E (+ 0x3E name-len))
-                entry-len (+ 62 name-len)
-                zero-count (- 8 (mod entry-len 8))
-                ctime-s (to-num (subvec vbs 0x00 0x04))
-                ctime-ns (to-num (subvec vbs 0x04 0x08))
-                mtime-s (to-num (subvec vbs 0x08 0x0C))
-                mtime-ns (to-num (subvec vbs 0x0C 0x10))]
-            (list (drop (+ entry-len zero-count) bs)
-                  {:inode (to-num (subvec vbs 0x14 0x18)),
-                   :device (to-num (subvec vbs 0x10 0x14)),
-                   :filesize (to-num (subvec vbs 0x24 0x28)),
-                   :name (to-str (map to-num name-bs)),
-                   :ctime (java.util.Date. (+ (* 1000 ctime-s) 
-                                              (/ ctime-ns 1000)))
-                   :mtime (java.util.Date. (+ (* 1000 mtime-s) 
-                                              (/ mtime-ns 1000)))
-                   :hash (clojure.string/join (subvec vbs 0x28 0x3C))})))]
+; TOOD: Get this to return a simple [int] type
+;   -> Move all functions to simpler types..
+(defn build-index [index-struct]
+  (let [out (java.io.ByteArrayOutputStream.)
+        wstr (fn [s] (.write out (.getBytes s)))
+        wchars (fn [cs] (doseq [c cs] (.write out (int c))))
+        file-count (count index-struct)]
+    (wstr "DIRC")
+    (wchars [0 0 0 2])
+    (wchars (int-bytes file-count 4))
+    (doseq [entry index-struct]
+      (let [ctime-s   (/ (.getTime    (:ctime entry)) 1000)
+            ctime-ns  (mod (.getTime  (:ctime entry)) 1000)
+            mtime-s   (/ (.getTime    (:mtime entry)) 1000)
+            mtime-ns  (mod (.getTime  (:mtime entry)) 1000)
+            bs (concat
+                (int-bytes ctime-s 4)
+                (int-bytes ctime-ns 4)
+                (int-bytes mtime-s 4)
+                (int-bytes mtime-ns 4)
+                (int-bytes (:device entry) 4)
+                (int-bytes (:inode entry) 4)
+                [0 0 129 164]  ; TODO: What is this??
+                [0 0 1 245]    ; UID TODO: Record in struct
+                [0 0 0 20]     ; GID TODO: Record in struct
+                (int-bytes (:filesize entry) 4)
+                (hex-bytes (:hash entry))
+                [0] ; Flags : TODO: Find out about this
+                [(count (:name entry))]
+                (map int (:name entry))
+               )
+            bs-padded (concat bs (repeat (- 8 (mod (count bs) 8)) 0))]
+            (wchars bs-padded)
+            (wchars (hex-bytes (sha-1-hex (byte-array (.toByteArray out)))))
+          ))
+    out))
 
-    (assert (= dirc "DIRC"))
-    (assert (= version 2))
-    (loop [[r e] (f-entry (drop header-len hs))
-           out []]
-      (if (= (count out) (dec file-count))
-        (conj out e)
-        (recur (f-entry r) (conj out e))))))
+;TODO Check validation bits to ensure correct parsing
+(defn read-index
+  ( [] (read-index (-> (str (git-root) "index") read-file )))
+  ( [stream]
+    (let [to-num (fn [x] (->> x
+                              (clojure.string/join)
+                              (str "0x")
+                              (read-string)))
+          byte-array (.toByteArray stream)
+          hs (vec (map #(format "%02x" (mod % 256)) byte-array))
+          header-len 12
+          dirc (to-str (subvec (vec byte-array) 0 4))
+          version (to-num (subvec hs 4 8))
+          file-count (to-num (subvec hs 8 12))
+          f-entry (fn [bs]
+            (let [vbs (vec bs)
+                  name-len (mod (to-num (subvec vbs 0x3C 0x3E)) 4096)
+                  name-bs (subvec vbs 0x3E (+ 0x3E name-len))
+                  entry-len (+ 62 name-len)
+                  zero-count (- 8 (mod entry-len 8))
+                  ctime-s (to-num (subvec vbs 0x00 0x04))
+                  ctime-ns (to-num (subvec vbs 0x04 0x08))
+                  mtime-s (to-num (subvec vbs 0x08 0x0C))
+                  mtime-ns (to-num (subvec vbs 0x0C 0x10))]
+              (list (drop (+ entry-len zero-count) bs)
+                    {:inode (to-num (subvec vbs 0x14 0x18)),
+                     :device (to-num (subvec vbs 0x10 0x14)),
+                     :filesize (to-num (subvec vbs 0x24 0x28)),
+                     :name (to-str (map to-num name-bs)),
+                     :ctime (java.util.Date. (+ (* 1000 ctime-s)
+                                                (/ ctime-ns 1000)))
+                     :mtime (java.util.Date. (+ (* 1000 mtime-s)
+                                                (/ mtime-ns 1000)))
+                     :hash (clojure.string/join (subvec vbs 0x28 0x3C))})))]
+
+      (assert (= dirc "DIRC"))
+      (assert (= version 2))
+      (loop [[r e] (f-entry (drop header-len hs))
+             out []]
+        (if (= (count out) (dec file-count))
+          (conj out e)
+          (recur (f-entry r) (conj out e)))))))
 
 (defn file-index-entry [fp]
   (let [[device inode] (file-dev-inode fp)]

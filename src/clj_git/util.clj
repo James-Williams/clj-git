@@ -17,7 +17,7 @@
 (defn read-file [path]
   (with-open [out (java.io.ByteArrayOutputStream.)]
     (clojure.java.io/copy (clojure.java.io/input-stream path) out)
-    (.toByteArray out)))
+    out))
 
 (defn to-str [x] (apply str (map char x)))
 
@@ -38,3 +38,7 @@
           nums (map #(read-string (str "0x" %)) strs)]
       nums)))
 
+(defn hex-bytes [hex-str]
+  (let [hex-strs (map #(apply str %) (partition 2 hex-str))
+        hex-bs (map #(read-string (str "0x" %)) hex-strs)]
+    hex-bs))
