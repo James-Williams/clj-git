@@ -24,3 +24,17 @@
 (defn current-unix-time []
   (quot (System/currentTimeMillis) 1000))
 
+(defn int-bytes
+  ( [val len]
+    (let [bs (int-bytes val)
+          bs-len (count bs)]
+      (assert (<= bs-len len))
+      (concat (repeat (- len bs-len) 0) bs)))
+  ( [val]
+    (let [hex (format "%02x" val)
+          even (if (even? (count hex)) hex (str "0" hex))
+          pairs (partition 2 even)
+          strs (map #(apply str %) pairs)
+          nums (map #(read-string (str "0x" %)) strs)]
+      nums)))
+
