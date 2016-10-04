@@ -102,14 +102,16 @@
        (byte-array)
        (sha-1-hex)))
 
+(defn is-valid-hash-str [s]
+  (= (count s) SHA-1-HEX-LENGTH))
+
 (defn all-objects []
   (let [object-path (str (git-root) "objects/")
         pref-files (drop 1 (file-seq (clojure.java.io/file object-path)))
         are-files (filter #(.isFile %) pref-files)
-        hashes (map #(str (.getName (.getParentFile %))
+        names (map #(str (.getName (.getParentFile %))
                          (.getName %)) are-files)]
-        
-    (map #(do (assert (= (count %) SHA-1-HEX-LENGTH)) %) hashes)))
+    (filter is-valid-hash-str names)))
 
 (defn complete-hash [hash-prefix]
   (assert (<= (count hash-prefix) SHA-1-HEX-LENGTH))
