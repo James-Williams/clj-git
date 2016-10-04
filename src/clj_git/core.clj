@@ -24,8 +24,6 @@
 
 ; Creates a new commit object (and all required tree objects)
 ; from the current index
-; TODO: Update the HEAD and branch after creating objects!
-;	(Do we need to update the index at all?)
 (defn create-commit
   ( [message]
     (create-commit message (head)))
@@ -39,4 +37,6 @@
                     "\n"
                     message "\n")]
       (doseq [e tree-structs] (write-tree (:contents e)))
-      (write-commit text))))
+      (let [new-commit-hash (write-commit text)]
+        (move-branch (head-name) new-commit-hash)
+        new-commit-hash))))
