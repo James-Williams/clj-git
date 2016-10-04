@@ -1,8 +1,11 @@
 (ns clj-git.repo
+  (:use clojure.java.io)
+  (:use clj-git.util)
   (:gen-class))
 
 (defn git-root [] "./.git/")
 
+; TODO: Read this properly..
 (defn get-author [] "j <jamie.williams89@gmail.com>")
 (def  get-committer get-author)
 
@@ -10,9 +13,16 @@
   (let [filepath (str (git-root) "refs/heads/" b)]
     (clojure.string/replace (slurp filepath) #"\n" "")))
 
-(defn head []
+(defn head-name []
   (let [filepath (str (git-root) "HEAD")
         full-branch (clojure.string/replace (slurp filepath) #"\n" "")
         branch-name (-> full-branch (clojure.string/split #"\/") (last))]
-    (branch branch-name)))
+  branch-name))
 
+(defn head []
+  (branch (head-name)))
+
+(defn move-branch [branch-name full-hash]
+  (let [filepath (str (git-root) "refs/heads/" branch-name)]
+    (assert (.exists (as-file filepath)))
+    (spit filepath full-hash)))
