@@ -24,7 +24,8 @@
 
 ; Creates a new commit object (and all required tree objects)
 ; from the current index
-; TODO: Update the index, HEAD and branch after creating objects!
+; TODO: Update the HEAD and branch after creating objects!
+;	(Do we need to update the index at all?)
 (defn create-commit
   ( [message]
     (create-commit message (head)))
