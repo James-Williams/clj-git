@@ -8,6 +8,7 @@
   (:gen-class))
 
 (declare is-file-modified)
+(declare is-file-staged)
 
 (defn -main [& args]
   (let [modified (->>  (read-index)
@@ -44,6 +45,7 @@
     )))
 
 ; TODO: This is slow! (checking if any files are staged takes a long time..)
+;         the tree-to-files function takes 1 second!
 (defn is-file-staged [filename]
   (let [head-tree (tree-to-files (:tree (commit (head))))
         tree-entry      (->> head-tree (filter #(= (:name %) filename)) (first))
