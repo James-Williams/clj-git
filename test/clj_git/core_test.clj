@@ -1,6 +1,7 @@
 (ns clj-git.core-test
   (:require [clojure.test :refer :all]
             [clj-git.util :refer :all]
+            [clj-git.file :refer :all]
             [clj-git.repo :refer :all]
             [clj-git.object :refer :all]
             [clj-git.core :refer :all]))
@@ -72,3 +73,24 @@
            "ca93b49848670d03b3968c8a481eca55f5fb2150"))
 )
 
+(deftest t-modified
+  (let [file "test_file"]
+    (testing (str file " is not modified to begin with")
+      (is (not (is-file-modified file))))
+    (testing "touching file does not make it modified"
+      (ok-sh "touch" file)
+      (is (not (is-file-modified file))))
+    (testing "changing the file does make it modified"
+      (let [file-contents (slurp file)]
+        (spit file "A")
+        (is (is-file-modified file))
+        (spit file file-contents)))
+    (testing "changing one byte of the file does make it modified"
+      (let [file-contents (slurp file)]
+        (spit file (str "A" (subs file-contents 1)))
+        (assert (= (count file-contents) (file-size file)))
+        (is (is-file-modified file))
+        (spit file file-contents)))
+    (testing (str file " is not modified at end of test")
+      (is (not (is-file-modified file))))
+  ))

@@ -12,15 +12,17 @@
   (doseq [x (modified)]
     (println (str "  " x))))
 
-; TODO: If times differ, compute hash to check for differences
-;   if not really different, update modified times back to index..?!
-; TODO: If times match, also check filesize
-; TODO: If times differ, double-check size then hash..
+; Use the following rules to quickly check for modified files:
+;         if filesystem mtime matches index           -> return False
+;   else  if filesystem size differs from index       -> return True
+;   else  check hash from filesystem vs index         -> return hash comparison
 (defn is-file-modified [filename]
-  (let [index-entry (->> (read-index) (filter #(= (:name %) filename)) first)
-        index-mtime (:mtime index-entry)
-        file-mtime  (file-mtime filename)]
-    (not= 0 (.compareTo index-mtime file-mtime))))
+  (let [index-entry (->> (read-index) (filter #(= (:name %) filename)) first)]
+    (cond
+      (= 0 (.compareTo (:mtime index-entry) (file-mtime filename))) false
+      (not= (:filesize index-entry) (file-size filename))           true
+      :else                 (not= (:hash index-entry) (hash-file filename))
+    )))
 
 (defn modified []
   (->> (read-index)
