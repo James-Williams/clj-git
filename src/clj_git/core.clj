@@ -4,6 +4,7 @@
   (:use clj-git.file)
   (:use clj-git.object)
   (:use clj-git.index)
+  (:use clj-git.tree)
   (:gen-class))
 
 (declare modified)
