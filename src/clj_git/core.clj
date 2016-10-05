@@ -33,7 +33,12 @@
        (filter is-file-modified)))
 
 (defn is-file-staged [filename]
-  false)
+  (let [head-tree (tree-to-files (:tree (commit (head))))
+        tree-entry      (->> head-tree (filter #(= (:name %) filename)) (first))
+        index-entry     (->> (read-index) (filter #(= (:name %) filename)) (first))
+        hash-from-head  (:hash tree-entry)
+        hash-from-index (:hash index-entry)]
+    (not= hash-from-head hash-from-index)))
 
 ; Creates a new commit object (and all required tree objects)
 ; from the current index
