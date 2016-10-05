@@ -31,6 +31,9 @@
        (map :name)
        (filter is-file-modified)))
 
+(defn is-file-staged [filename]
+  false)
+
 ; Creates a new commit object (and all required tree objects)
 ; from the current index
 (defn create-commit

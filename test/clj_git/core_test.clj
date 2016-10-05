@@ -73,7 +73,7 @@
            "ca93b49848670d03b3968c8a481eca55f5fb2150"))
 )
 
-(deftest t-modified
+(deftest t-is-file-modified
   (let [file "test_file"]
     (testing (str file " is not modified to begin with")
       (is (not (is-file-modified file))))
@@ -93,4 +93,26 @@
         (spit file file-contents)))
     (testing (str file " is not modified at end of test")
       (is (not (is-file-modified file))))
+  ))
+
+(deftest t-is-file-staged
+  (let [file "test_file"]
+    (testing (str file " is not modified or staged to begin with")
+      (is (not (is-file-modified file)))
+      (is (not (is-file-staged file)))
+    )
+    (testing "adding a modification using git makes it staged and unmodified"
+      (let [file-contents (slurp file)]
+        (spit file "A")
+        (assert (is-file-modified file))
+        (ok-sh "git" "add" file) ; TODO: Write and use clojure functions
+        (assert (not (is-file-modified file)))
+        (is (is-file-staged file))
+        (ok-sh "git" "reset" file) ; TODO: Write and use clojure functions
+        (spit file file-contents)
+    ))
+    (testing (str file " is not modified or staged at end of test")
+      (is (not (is-file-modified file)))
+      (is (not (is-file-staged file)))
+    )
   ))
