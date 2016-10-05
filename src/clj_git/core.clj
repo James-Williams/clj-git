@@ -14,13 +14,15 @@
 
 ; Use the following rules to quickly check for modified files:
 ;         if filesystem mtime matches index           -> return False
-;   else  if filesystem size differs from index       -> return True
+;   else  if filesystem filesize differs from index   -> return True
 ;   else  check hash from filesystem vs index         -> return hash comparison
+; NOTE: Do not check mtime and filesize when index inode == 0..
 (defn is-file-modified [filename]
-  (let [index-entry (->> (read-index) (filter #(= (:name %) filename)) first)]
+  (let [index-entry (->> (read-index) (filter #(= (:name %) filename)) first)
+        good-index  (not= (:inode index-entry) 0)] ; TODO: Lookup why this is needed
     (cond
-      (= 0 (.compareTo (:mtime index-entry) (file-mtime filename))) false
-      (not= (:filesize index-entry) (file-size filename))           true
+      (and good-index (= 0 (.compareTo (:mtime index-entry) (file-mtime filename))))  false
+      (and good-index (not= (:filesize index-entry) (file-size filename)))            true
       :else                 (not= (:hash index-entry) (hash-file filename))
     )))
 
