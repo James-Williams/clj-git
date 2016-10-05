@@ -16,11 +16,16 @@
 ;   if not really different, update modified times back to index..?!
 ; TODO: If times match, also check filesize
 ; TODO: If times differ, double-check size then hash..
+(defn is-file-modified [filename]
+  (let [index-entry (->> (read-index) (filter #(= (:name %) filename)) first)
+        index-mtime (:mtime index-entry)
+        file-mtime  (file-mtime filename)]
+    (not= 0 (.compareTo index-mtime file-mtime))))
+
 (defn modified []
   (->> (read-index)
-       (map #(list (:name %) (:mtime %) (file-mtime (:name %))))
-       (filter #(not= 0 (.compareTo (nth % 1) (nth % 2))))
-       (map first)))
+       (map :name)
+       (filter is-file-modified)))
 
 ; Creates a new commit object (and all required tree objects)
 ; from the current index

@@ -94,15 +94,15 @@
           (conj out e)
           (recur (f-entry r) (conj out e)))))))
 
-(defn file-index-entry [fp]
-  (let [[device inode] (file-dev-inode fp)]
+(defn file-index-entry [filename]
+  (let [[device inode] (file-dev-inode filename)]
     {:inode inode,
      :device device,
-     :filesize (file-size fp),
-     :name fp,
-     :ctime (file-mtime fp),
-     :mtime (file-mtime fp),
-     :hash (hash-file fp)}))
+     :filesize (file-size filename),
+     :name filename,
+     :ctime (file-mtime filename),
+     :mtime (file-mtime filename),
+     :hash (hash-file filename)}))
 
 (defn positions [pred coll]
   (keep-indexed (fn [idx x]
