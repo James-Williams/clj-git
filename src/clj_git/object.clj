@@ -173,5 +173,16 @@
 (defn blob [hash-hex]
   (to-str (second (read-object hash-hex))))
 
-(def commit blob)
-
+(defn commit [hash-str]
+  (let [text  (blob hash-str)
+        lines (clojure.string/split text #"\n")
+        [header body] (split-with #(not= % "") lines)
+        pairs (->> header
+                (map #(clojure.string/split % #" "))
+                (map #(list (first %) (clojure.string/join " " (rest %))))
+              )
+        commit (clojure.string/join "\n" (rest body))]
+    (reduce (fn [entries pair]
+              (assoc entries (keyword (first pair)) (second pair)))
+            {:message commit}
+            pairs)))
