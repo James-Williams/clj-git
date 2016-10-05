@@ -7,11 +7,27 @@
   (:use clj-git.tree)
   (:gen-class))
 
-(declare modified)
+(declare is-file-modified)
+
 (defn -main [& args]
-  (println "Unstaged Changes:")
-  (doseq [x (modified)]
-    (println (str "  " x))))
+  (let [modified (->>  (read-index)
+                       (map :name)
+                       (filter is-file-modified))
+        staged (->>  (read-index)
+                       (map :name)
+                       (filter is-file-staged))]
+  (if-not (empty? modified)
+    (do
+      (println "Unstaged Changes:")
+      (doseq [x modified]
+        (println (str "  " x)))))
+
+  (if-not (empty? staged)
+    (do
+      (println "Staged For Commit:")
+      (doseq [x staged]
+        (println (str "  " x)))))
+))
 
 ; Use the following rules to quickly check for modified files:
 ;         if filesystem mtime matches index           -> return False
@@ -27,11 +43,7 @@
       :else                 (not= (:hash index-entry) (hash-file filename))
     )))
 
-(defn modified []
-  (->> (read-index)
-       (map :name)
-       (filter is-file-modified)))
-
+; TODO: This is slow! (checking if any files are staged takes a long time..)
 (defn is-file-staged [filename]
   (let [head-tree (tree-to-files (:tree (commit (head))))
         tree-entry      (->> head-tree (filter #(= (:name %) filename)) (first))
