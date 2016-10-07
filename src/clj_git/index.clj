@@ -203,14 +203,25 @@
 ;   else  if filesystem filesize differs from index   -> return True
 ;   else  check hash from filesystem vs index         -> return hash comparison
 ; NOTE: Do not check mtime and filesize when index inode == 0..
-(defn is-file-modified [filename]
-  (let [index-entry (->> (read-index) (filter #(= (:name %) filename)) first)
-        good-index  (not= (:inode index-entry) 0)] ; TODO: Lookup why this is needed
-    (cond
-      (and good-index (= 0 (.compareTo (:mtime index-entry) (file-mtime filename))))  false
-      (and good-index (not= (:filesize index-entry) (file-size filename)))            true
-      :else                 (not= (:hash index-entry) (hash-file filename))
-    )))
+(defn is-file-modified
+  ( [filename]  (is-file-modified
+                  filename
+                  (->> (read-index) (filter #(= (:name %) filename)) first)) )
+  ( [filename index-entry]
+    (let [good-index  (not= (:inode index-entry) 0)] ; TODO: Lookup why this is needed
+      (cond
+        (and good-index (= 0 (.compareTo (:mtime index-entry) (file-mtime filename))))  false
+        (and good-index (not= (:filesize index-entry) (file-size filename)))            true
+        :else                 (not= (:hash index-entry) (hash-file filename))
+    ))))
+
+(defn list-modified-files []
+  (let [index       (read-index)
+        index-names (map #(:name %) index)
+        index-map   (into {} (map vector index-names index))]
+    (->> index-names (filter
+      (fn [filename]
+        (is-file-modified filename (get index-map filename)))))))
 
 (defn list-staged-files []
   (let [index       (read-index)

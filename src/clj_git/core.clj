@@ -8,20 +8,18 @@
   (:gen-class))
 
 (defn print-status []
-  (let [modified (->>  (read-index)
-                       (map :name)
-                       (filter is-file-modified))
-        staged (list-staged-files)]
-  (if-not (empty? modified)
-    (do
-      (println "\nUnstaged Changes:")
-      (doseq [x modified]
-        (println (str "  " x)))))
-
+  (let [modified  (list-modified-files)
+        staged    (list-staged-files)]
   (if-not (empty? staged)
     (do
       (println "\nStaged For Commit:")
       (doseq [x staged]
+        (println (str "  " x)))))
+
+  (if-not (empty? modified)
+    (do
+      (println "\nUnstaged Changes:")
+      (doseq [x modified]
         (println (str "  " x)))))
 ))
 
