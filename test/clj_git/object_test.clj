@@ -11,4 +11,14 @@
         :author "j <jamie.williams89@gmail.com> 1453468511 +0000",
         :committer "j <jamie.williams89@gmail.com> 1453468511 +0000"} 
     )))
+  (testing "Check structure for multi-line commit"
+    (is (=
+      (commit "a4c719416bd67212ec386b2bbb3405c62b0c8ac5")
+      {:message
+      "Don't write objects that exist.\n\nSet files to non-writable once written",
+      :tree "de850342386653cd371fd3a0eb2c0d7e051052e6",
+      :parent "7d6811bc2e5065e170a5b6d787283c7054927f32",
+      :author "j <jamie.williams89@gmail.com> 1453647595 +0000",
+      :committer "j <jamie.williams89@gmail.com> 1453647595 +0000"}
+    )))
 )
