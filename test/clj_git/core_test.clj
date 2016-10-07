@@ -67,3 +67,5 @@
     (is (= (hash-tree (tree "ca93"))
            "ca93b49848670d03b3968c8a481eca55f5fb2150"))
 )
+
+; TODO: Add tests for list-unignored-files and list-untracked-files

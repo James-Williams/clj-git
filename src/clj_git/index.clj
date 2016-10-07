@@ -1,6 +1,7 @@
 (ns clj-git.index
   (:use clj-message-digest.core)
   (:use clojure.java.io)
+  (:require [clojure.set :only [difference]])
   (:use clj-git.util)
   (:use clj-git.repo)
   (:use clj-git.file)
@@ -238,3 +239,32 @@
 
 (defn is-file-staged [filename]
   (contains? (into #{} (list-staged-files)) filename))
+
+; TODO: Split filtering out into seperate function with unit tests
+(defn list-unignored-files []
+  (let [root-filter-str "/.git/"
+        to-regex  (fn [s]
+                    (if (= (first s) \/)
+                      (re-pattern (str "\\./" (glob-to-regex-str (.substring s 1)) ".*"))
+                      (re-pattern (str "\\./.*" (glob-to-regex-str s) ".*"))))]
+    (->>
+      (clojure.java.io/file ".")
+      (file-seq)
+      (filter #(not (.isDirectory %)))
+      (map #(.getPath %))
+      (filter #(not (re-matches (to-regex root-filter-str) %)))
+      (filter #(not (re-matches (to-regex ".gitignore") %)))
+      (filter #(not (re-matches (to-regex "/target") %))) ;TODO: Pick these up from .gitignore!
+      (filter #(not (re-matches (to-regex "*.swp") %)))
+      (filter #(not (re-matches (to-regex "/.lein-*") %)))
+      (filter #(not (re-matches (to-regex "/.nrepl-port") %)))
+      (map #(.substring % 2))
+  )
+))
+
+(defn list-untracked-files []
+  (let [index       (read-index)
+        index-names (map #(:name %) index)
+        index-set   (into #{} index-names)
+        wd-set      (into #{} (list-unignored-files))]
+    (vec (clojure.set/difference wd-set index-set))))

@@ -45,3 +45,25 @@
 
 (def byte-seq #(->> % .toByteArray (map (fn [x] (mod x 256))) vec))
 
+(defn glob-to-regex-str
+  "Takes a glob-format string and returns a regex-format string."
+  [s]
+  (loop [stream s
+         re ""
+         curly-depth 0]
+    (let [[c j] stream]
+        (cond
+         (nil? c) (str (if (= \. (first s)) "" "(?=[^\\.])") re)
+         (= c \\) (recur (nnext stream) (str re c c) curly-depth)
+         (= c \/) (if (= c j) (recur (next (next stream)) (str re c) curly-depth)
+                    (recur (next stream) (str re (if (= \. j) c "/(?=[^\\.])"))
+                         curly-depth))
+         (= c \*) (recur (next stream) (str re "[^/]*") curly-depth)
+         (= c \?) (recur (next stream) (str re "[^/]") curly-depth)
+         (= c \{) (recur (next stream) (str re \() (inc curly-depth))
+         (= c \}) (recur (next stream) (str re \)) (dec curly-depth))
+         (and (= c \,) (< 0 curly-depth)) (recur (next stream) (str re \|)
+                                                 curly-depth)
+         (#{\. \( \) \| \+ \^ \$ \@ \%} c) (recur (next stream) (str re \\ c)
+                                                  curly-depth)
+         :else (recur (next stream) (str re c) curly-depth)))))

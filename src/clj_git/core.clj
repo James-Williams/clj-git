@@ -9,7 +9,8 @@
 
 (defn print-status []
   (let [modified  (list-modified-files)
-        staged    (list-staged-files)]
+        staged    (list-staged-files)
+        untracked (list-untracked-files)]
   (if-not (empty? staged)
     (do
       (println "\nStaged For Commit:")
@@ -20,6 +21,12 @@
     (do
       (println "\nUnstaged Changes:")
       (doseq [x modified]
+        (println (str "  " x)))))
+
+  (if-not (empty? untracked)
+    (do
+      (println "\nUntracked Files:")
+      (doseq [x untracked]
         (println (str "  " x)))))
 ))
 
