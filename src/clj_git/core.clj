@@ -43,3 +43,8 @@
       (let [new-commit-hash (write-commit text)]
         (move-branch (head-name) new-commit-hash)
         new-commit-hash))))
+
+(defn stage-all-changes []
+  (doseq [filename (list-modified-files)]
+    (stage-file filename))
+  (print-status))
