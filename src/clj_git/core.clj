@@ -7,7 +7,7 @@
   (:use clj-git.tree)
   (:gen-class))
 
-(defn -main [& args]
+(defn print-status []
   (let [modified (->>  (read-index)
                        (map :name)
                        (filter is-file-modified))
@@ -24,6 +24,8 @@
       (doseq [x staged]
         (println (str "  " x)))))
 ))
+
+(defn -main [& args] (print-status))
 
 ; Creates a new commit object (and all required tree objects)
 ; from the current index
