@@ -212,13 +212,18 @@
       :else                 (not= (:hash index-entry) (hash-file filename))
     )))
 
-; TODO: This is slow! (checking if any files are staged takes a long time..)
-;         the tree-to-files function takes 1 second!
-(defn is-file-staged [filename]
-  (let [head-tree (tree-to-files (:tree (commit (head))))
-        tree-entry      (->> head-tree (filter #(= (:name %) filename)) (first))
-        index-entry     (->> (read-index) (filter #(= (:name %) filename)) (first))
-        hash-from-head  (:hash tree-entry)
-        hash-from-index (:hash index-entry)]
-    (not= hash-from-head hash-from-index)))
+(defn list-staged-files []
+  (let [index       (read-index)
+        index-names (map #(:name %) index)
+        index-map   (into {} (map vector index-names index))
+        head-files  (tree-to-files (:tree (commit (head))))
+        head-names  (map #(:name %) head-files)
+        head-map    (into {} (map vector head-names head-files))]
+    (->> index-names (filter
+      (fn [filename]
+        (let [hash-from-index (:hash (get index-map filename))
+              hash-from-head  (:hash (get head-map filename))]
+          (not= hash-from-head hash-from-index)))))))
 
+(defn is-file-staged [filename]
+  (contains? (into #{} (list-staged-files)) filename))

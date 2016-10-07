@@ -11,18 +11,16 @@
   (let [modified (->>  (read-index)
                        (map :name)
                        (filter is-file-modified))
-        staged (->>  (read-index)
-                       (map :name)
-                       (filter is-file-staged))]
+        staged (list-staged-files)]
   (if-not (empty? modified)
     (do
-      (println "Unstaged Changes:")
+      (println "\nUnstaged Changes:")
       (doseq [x modified]
         (println (str "  " x)))))
 
   (if-not (empty? staged)
     (do
-      (println "Staged For Commit:")
+      (println "\nStaged For Commit:")
       (doseq [x staged]
         (println (str "  " x)))))
 ))
