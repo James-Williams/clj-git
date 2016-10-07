@@ -22,3 +22,14 @@
       :committer "j <jamie.williams89@gmail.com> 1453647595 +0000"}
     )))
 )
+
+(deftest t-write-blob
+  (testing "Store test_file blob")
+    (is (= (write-blob (slurp "test_file"))
+           "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")))
+
+(deftest t-write-file-blob
+  (testing "Store test_file blob")
+    (is (= (write-file-blob "test_file")
+           "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")))
+

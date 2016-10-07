@@ -189,7 +189,8 @@
     [top-hash objs]))
 
 (defn stage-file [filename]
-  (print "DO ME"))
+  (let [new-entry (file-index-entry filename)]
+    nil))
 
 ; Use the following rules to quickly check for modified files:
 ;         if filesystem mtime matches index           -> return False

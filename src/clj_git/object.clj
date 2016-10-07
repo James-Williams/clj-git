@@ -52,6 +52,9 @@
 (defn write-blob [text]
   (write-object (str "blob " (count text) "\0" text)))
 
+(defn write-file-blob [filename]
+  (write-blob (slurp filename)))
+
 (defn write-commit [text]
   (write-object (str "commit " (count text) "\0" text)))
 
