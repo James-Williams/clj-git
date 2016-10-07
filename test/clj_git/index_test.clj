@@ -2,6 +2,7 @@
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
             [clj-git.util :refer :all]
+            [clj-git.file :refer :all]
             [clj-git.repo :refer :all]
             [clj-git.index :refer :all]))
 
@@ -82,3 +83,60 @@
     (is (= (first (index-to-tree-objects))
            "4b90f754d0ddf46643fb5250b47cddfb43102f30")))
 )
+
+(deftest t-stage-file
+  (let [filename "newfile"]
+    (testing "New file get's added to index"
+      (assert (not (.exists (clojure.java.io/as-file filename))))
+      (spit filename "hello")
+      (is (not (is-file-staged filename)))
+      (stage-file filename)
+      (is (is-file-staged filename))
+      (ok-sh "git" "reset" filename)
+      (clojure.java.io/delete-file filename)
+    )
+))
+
+(deftest t-is-file-modified
+  (let [file "test_file"]
+    (testing (str file " is not modified to begin with")
+      (is (not (is-file-modified file))))
+    (testing "touching file does not make it modified"
+      (ok-sh "touch" file)
+      (is (not (is-file-modified file))))
+    (testing "changing the file does make it modified"
+      (let [file-contents (slurp file)]
+        (spit file "A")
+        (is (is-file-modified file))
+        (spit file file-contents)))
+    (testing "changing one byte of the file does make it modified"
+      (let [file-contents (slurp file)]
+        (spit file (str "A" (subs file-contents 1)))
+        (assert (= (count file-contents) (file-size file)))
+        (is (is-file-modified file))
+        (spit file file-contents)))
+    (testing (str file " is not modified at end of test")
+      (is (not (is-file-modified file))))
+  ))
+
+(deftest t-is-file-staged
+  (let [file "test_file"]
+    (testing (str file " is not modified or staged to begin with")
+      (is (not (is-file-modified file)))
+      (is (not (is-file-staged file)))
+    )
+    (testing "adding a modification using git makes it staged and unmodified"
+      (let [file-contents (slurp file)]
+        (spit file "A")
+        (assert (is-file-modified file))
+        (ok-sh "git" "add" file) ; TODO: Write and use clojure functions
+        (assert (not (is-file-modified file)))
+        (is (is-file-staged file))
+        (ok-sh "git" "reset" file) ; TODO: Write and use clojure functions
+        (spit file file-contents)
+    ))
+    (testing (str file " is not modified or staged at end of test")
+      (is (not (is-file-modified file)))
+      (is (not (is-file-staged file)))
+    )
+  ))

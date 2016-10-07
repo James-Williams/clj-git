@@ -5,6 +5,7 @@
   (:use clj-git.repo)
   (:use clj-git.file)
   (:use clj-git.object)
+  (:use clj-git.tree)
   (:gen-class))
 
 ; TOOD: Get this to return a simple [int] type
@@ -186,3 +187,31 @@
         files-map (files-tree index-files)
         [top-hash objs] (files-map-to-objs files-map)]
     [top-hash objs]))
+
+(defn stage-file [filename]
+  (print "DO ME"))
+
+; Use the following rules to quickly check for modified files:
+;         if filesystem mtime matches index           -> return False
+;   else  if filesystem filesize differs from index   -> return True
+;   else  check hash from filesystem vs index         -> return hash comparison
+; NOTE: Do not check mtime and filesize when index inode == 0..
+(defn is-file-modified [filename]
+  (let [index-entry (->> (read-index) (filter #(= (:name %) filename)) first)
+        good-index  (not= (:inode index-entry) 0)] ; TODO: Lookup why this is needed
+    (cond
+      (and good-index (= 0 (.compareTo (:mtime index-entry) (file-mtime filename))))  false
+      (and good-index (not= (:filesize index-entry) (file-size filename)))            true
+      :else                 (not= (:hash index-entry) (hash-file filename))
+    )))
+
+; TODO: This is slow! (checking if any files are staged takes a long time..)
+;         the tree-to-files function takes 1 second!
+(defn is-file-staged [filename]
+  (let [head-tree (tree-to-files (:tree (commit (head))))
+        tree-entry      (->> head-tree (filter #(= (:name %) filename)) (first))
+        index-entry     (->> (read-index) (filter #(= (:name %) filename)) (first))
+        hash-from-head  (:hash tree-entry)
+        hash-from-index (:hash index-entry)]
+    (not= hash-from-head hash-from-index)))
+
