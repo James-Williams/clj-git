@@ -11,14 +11,15 @@
 ; TOOD: Get this to return a simple [int] type
 ;   -> Move all functions to simpler types..
 (defn build-index [index-struct]
-  (let [out (java.io.ByteArrayOutputStream.)
-        wstr (fn [s] (.write out (.getBytes s)))
-        wchars (fn [cs] (doseq [c cs] (.write out (int c))))
-        file-count (count index-struct)]
+  (let [out                 (java.io.ByteArrayOutputStream.)
+        wstr                (fn [s] (.write out (.getBytes s)))
+        wchars              (fn [cs] (doseq [c cs] (.write out (int c))))
+        file-count          (count index-struct)
+        sorted-index-struct (sort-by #(:name %) index-struct)]
     (wstr "DIRC")
     (wchars [0 0 0 2])
     (wchars (int-bytes file-count 4))
-    (doseq [entry index-struct]
+    (doseq [entry sorted-index-struct]
       (let [ctime-s   (/ (.getTime    (:ctime entry)) 1000)
             ctime-ns  (mod (.getTime  (:ctime entry)) 1000)
             mtime-s   (/ (.getTime    (:mtime entry)) 1000)
@@ -190,7 +191,12 @@
 
 (defn stage-file [filename]
   (let [new-entry (file-index-entry filename)]
-    nil))
+    (write-file-blob filename)
+    (->> (read-index)
+      (filter #(not= (:name %) filename))
+      (cons new-entry)
+      (write-index))
+))
 
 ; Use the following rules to quickly check for modified files:
 ;         if filesystem mtime matches index           -> return False
