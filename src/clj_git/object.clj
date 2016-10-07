@@ -147,6 +147,7 @@
   (let [header (to-str (first (read-object hash-hex)))]
     (first (clojure.string/split header #" "))))
 
+; TODO: This takes ~250ms!
 (defn tree [h]
   (let [[header ins] (read-object h)
         f-entry (fn [bs]
