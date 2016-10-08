@@ -70,6 +70,6 @@
 
 (defn glob-match? [glob s]
   (let [regex (if (= (first glob) \/)
-                (re-pattern (str "\\./" (glob-to-regex-str (.substring glob 1)) ".*"))
-                (re-pattern (str "\\./.*" (glob-to-regex-str glob) ".*")))]
-    (re-matches regex s)))
+                (re-pattern (str (glob-to-regex-str (.substring glob 1)) ".*"))
+                (re-pattern (str ".*" (glob-to-regex-str glob) ".*")))]
+    (if (re-matches regex s) true false)))

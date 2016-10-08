@@ -246,6 +246,7 @@
     (file-seq)
     (filter #(not (.isDirectory %)))
     (map #(.getPath %))
+    (map #(.substring % 2))
     (filter #(not (glob-match? "/.git/" %)))
 ))
 
@@ -257,7 +258,6 @@
         filters             (map #(partial f %) patterns)]
     (->> (list-all-files)
       ((apply comp filters))
-      (map #(.substring % 2))
   )
 ))
 

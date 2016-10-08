@@ -140,3 +140,29 @@
       (is (not (is-file-staged file)))
     )
   ))
+
+(deftest t-list-all-files
+  (testing ".git/config is not listed"
+    (assert (.exists (clojure.java.io/as-file ".git/config")))
+    (is (not (contains? (into #{} (list-all-files)) ".git/config")))
+  )
+)
+
+(deftest t-list-files
+  (testing "test_file is listed"
+    (assert (.exists (clojure.java.io/as-file "test_file")))
+    (is (contains? (into #{} (list-files)) "test_file"))
+  )
+
+  (testing ".git file ending is not masked"
+    (assert (not (.exists (clojure.java.io/as-file "test.git"))))
+    (ok-sh "touch" "test.git")
+    (is (contains? (into #{} (list-files)) "test.git"))
+    (clojure.java.io/delete-file "test.git")
+  )
+
+  (testing ".gitignore is not listed"
+    (assert (.exists (clojure.java.io/as-file ".gitignore")))
+    (is (not (contains? (into #{} (list-files)) ".gitignore")))
+  )
+)
