@@ -28,6 +28,8 @@
       (println "\nUntracked Files:")
       (doseq [x untracked]
         (println (str "  " x)))))
+  (if (every? empty? [staged modified untracked])
+    (println "Nothing to report, working directory clean"))
 ))
 
 (defn -main [& args] (print-status))
