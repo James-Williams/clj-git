@@ -240,18 +240,22 @@
 (defn is-file-staged [filename]
   (contains? (into #{} (list-staged-files)) filename))
 
-(defn list-unignored-files []
-  (let [root-filter-str "/.git/"
-        gitignore-patterns  (-> (slurp ".gitignore") (clojure.string/split #"\n"))
-        buildin-patterns    [root-filter-str ".gitignore"]
+(defn list-all-files []
+  (->>
+    (clojure.java.io/file ".")
+    (file-seq)
+    (filter #(not (.isDirectory %)))
+    (map #(.getPath %))
+    (filter #(not (glob-match? "/.git/" %)))
+))
+
+(defn list-files []
+  (let [gitignore-patterns  (-> (slurp ".gitignore") (clojure.string/split #"\n"))
+        buildin-patterns    [".gitignore"]
         patterns            (concat buildin-patterns gitignore-patterns)
         f                   (fn [g ss] (filter #(not (glob-match? g %)) ss))
         filters             (map #(partial f %) patterns)]
-    (->>
-      (clojure.java.io/file ".")
-      (file-seq)
-      (filter #(not (.isDirectory %)))
-      (map #(.getPath %))
+    (->> (list-all-files)
       ((apply comp filters))
       (map #(.substring % 2))
   )
@@ -261,5 +265,5 @@
   (let [index       (read-index)
         index-names (map #(:name %) index)
         index-set   (into #{} index-names)
-        wd-set      (into #{} (list-unignored-files))]
+        wd-set      (into #{} (list-files))]
     (vec (clojure.set/difference wd-set index-set))))
