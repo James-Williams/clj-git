@@ -246,18 +246,20 @@
         to-regex  (fn [s]
                     (if (= (first s) \/)
                       (re-pattern (str "\\./" (glob-to-regex-str (.substring s 1)) ".*"))
-                      (re-pattern (str "\\./.*" (glob-to-regex-str s) ".*"))))]
+                      (re-pattern (str "\\./.*" (glob-to-regex-str s) ".*"))))
+        gitignore-patterns  (-> (slurp ".gitignore") (clojure.string/split #"\n"))
+        buildin-patterns    [root-filter-str ".gitignore"]
+        patterns            (concat buildin-patterns gitignore-patterns)
+        filter-fn           (fn [pattern]
+                              (fn [strings]
+                                (filter #(not (re-matches (to-regex pattern) %)) strings)))
+        filters             (map filter-fn patterns)]
     (->>
       (clojure.java.io/file ".")
       (file-seq)
       (filter #(not (.isDirectory %)))
       (map #(.getPath %))
-      (filter #(not (re-matches (to-regex root-filter-str) %)))
-      (filter #(not (re-matches (to-regex ".gitignore") %)))
-      (filter #(not (re-matches (to-regex "/target") %))) ;TODO: Pick these up from .gitignore!
-      (filter #(not (re-matches (to-regex "*.swp") %)))
-      (filter #(not (re-matches (to-regex "/.lein-*") %)))
-      (filter #(not (re-matches (to-regex "/.nrepl-port") %)))
+      ((apply comp filters))
       (map #(.substring % 2))
   )
 ))
