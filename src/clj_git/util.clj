@@ -67,3 +67,9 @@
          (#{\. \( \) \| \+ \^ \$ \@ \%} c) (recur (next stream) (str re \\ c)
                                                   curly-depth)
          :else (recur (next stream) (str re c) curly-depth)))))
+
+(defn glob-match? [glob s]
+  (let [regex (if (= (first glob) \/)
+                (re-pattern (str "\\./" (glob-to-regex-str (.substring glob 1)) ".*"))
+                (re-pattern (str "\\./.*" (glob-to-regex-str glob) ".*")))]
+    (re-matches regex s)))

@@ -240,20 +240,13 @@
 (defn is-file-staged [filename]
   (contains? (into #{} (list-staged-files)) filename))
 
-; TODO: Split filtering out into seperate function with unit tests
 (defn list-unignored-files []
   (let [root-filter-str "/.git/"
-        to-regex  (fn [s]
-                    (if (= (first s) \/)
-                      (re-pattern (str "\\./" (glob-to-regex-str (.substring s 1)) ".*"))
-                      (re-pattern (str "\\./.*" (glob-to-regex-str s) ".*"))))
         gitignore-patterns  (-> (slurp ".gitignore") (clojure.string/split #"\n"))
         buildin-patterns    [root-filter-str ".gitignore"]
         patterns            (concat buildin-patterns gitignore-patterns)
-        filter-fn           (fn [pattern]
-                              (fn [strings]
-                                (filter #(not (re-matches (to-regex pattern) %)) strings)))
-        filters             (map filter-fn patterns)]
+        f                   (fn [g ss] (filter #(not (glob-match? g %)) ss))
+        filters             (map #(partial f %) patterns)]
     (->>
       (clojure.java.io/file ".")
       (file-seq)
