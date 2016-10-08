@@ -191,6 +191,7 @@
     [top-hash objs]))
 
 (defn stage-file [filename]
+  "Update index to match the working copy of a file"
   (let [new-entry (file-index-entry filename)]
     (write-file-blob filename)
     (->> (read-index)
@@ -198,6 +199,13 @@
       (cons new-entry)
       (write-index))
 ))
+
+(defn checkout-file [filename]
+  "Update the working copy of a file to match the index"
+  (let [entry (first (filter #(= (:name %) filename) (read-index)))
+        h     (:hash entry)]
+    (assert entry)
+    (spit filename (blob h))))
 
 ; Use the following rules to quickly check for modified files:
 ;         if filesystem mtime matches index           -> return False

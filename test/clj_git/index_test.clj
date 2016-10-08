@@ -97,6 +97,22 @@
     )
 ))
 
+(deftest t-checkout-file
+  (let [file "test_file"]
+    (testing "Deleted file can be restored from index"
+      (assert (.exists (clojure.java.io/as-file file)))
+      (assert (not (is-file-modified file)))
+      (assert (not (is-file-staged file)))
+      (let [contents (slurp file)]
+        (clojure.java.io/delete-file file)
+        (is (is-file-modified file))
+        (checkout-file file)
+        (is (not (is-file-modified file)))
+        (spit file contents))
+    )
+  )
+)
+
 (deftest t-is-file-modified
   (let [file "test_file"]
     (testing (str file " is not modified to begin with")
