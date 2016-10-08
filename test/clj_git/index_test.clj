@@ -129,7 +129,7 @@
       (let [file-contents (slurp file)]
         (spit file "A")
         (assert (is-file-modified file))
-        (ok-sh "git" "add" file) ; TODO: Write and use clojure functions
+        (stage-file file)
         (assert (not (is-file-modified file)))
         (is (is-file-staged file))
         (ok-sh "git" "reset" file) ; TODO: Write and use clojure functions
