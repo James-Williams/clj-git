@@ -18,25 +18,29 @@
     )
 
 (deftest t-build-index
-  (testing "Single file index is correctly constructed")
-  (is (= (byte-seq (build-index
-          [ { :inode 1529592,
-              :device 16777220,
-              :filesize 16,
-              :name "test_file",
-              :ctime #inst "2016-06-22T09:29:27.000-00:00",
-              :mtime #inst "2016-06-22T09:29:27.000-00:00",
-              :hash "2d55082916969610e3c65cec1fc04766208f39d4"} ]))
-          (byte-seq (read-file "test/fixture_one_file/index")))))
+  (testing "Single file index is correctly constructed"
+    (is (= (byte-seq (build-index
+            [ { :inode 1529592,
+                :device 16777220,
+                :filesize 16,
+                :name "test_file",
+                :ctime #inst "2016-06-22T09:29:27.000-00:00",
+                :mtime #inst "2016-06-22T09:29:27.000-00:00",
+                :hash "2d55082916969610e3c65cec1fc04766208f39d4"} ]))
+            (byte-seq (read-file "fixtures/one_file.git/index"))))
+  )
+)
 
-(deftest t-build-index
+(deftest t-build-then-index
   (testing "Build then Read an index produces the input index data"
     (doseq [filepath ["test/fixture1/index"
                       "test/fixture2/index"
                       "test/fixture3/index"] ]
       (let [index-struct (read-index (read-file filepath))]
         (is (= (-> index-struct build-index read-index)
-               index-struct))))))
+               index-struct))))
+  )
+)
 
 (deftest t-file-tree
   (testing "Build file tree structure from example file list")
@@ -97,6 +101,7 @@
     )
 ))
 
+; TODO: UNSTABLE! Failure from test_file missing sometimes (test interference..)
 (deftest t-checkout-file
   (let [file "test_file"]
     (testing "Deleted file can be restored from index"
