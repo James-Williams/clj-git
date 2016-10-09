@@ -181,12 +181,14 @@
   (let [text  (blob hash-str)
         lines (clojure.string/split text #"\n")
         [header body] (split-with #(not= % "") lines)
-        pairs (->> header
+        pairs'(->> header
                 (map #(clojure.string/split % #" "))
                 (map #(list (first %) (clojure.string/join " " (rest %))))
               )
+        parents (map second (filter #(= (first %) "parent") pairs'))
+        pairs (filter #(not= (first %) "parent") pairs')
         commit (clojure.string/join "\n" (rest body))]
     (reduce (fn [entries pair]
               (assoc entries (keyword (first pair)) (second pair)))
-            {:message commit}
+            {:message commit, :parents parents}
             pairs)))
