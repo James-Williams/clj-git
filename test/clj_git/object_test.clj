@@ -22,7 +22,17 @@
       :author "j <jamie.williams89@gmail.com> 1453647595 +0000",
       :committer "j <jamie.williams89@gmail.com> 1453647595 +0000"}
     )))
-  ; TOOD: Add a test for multiple parents!
+  (testing "Commit will multiple parents"
+    (is (= (commit "1d8678f71731f37086ad2c91d11b0bd092e8b5a9")
+          {:message
+          "Merge branch 'parent' to create a multi-parent commit (for use in testing)",
+          :parents  [ "96c9883dcb0c0acbed226cb4b43ac6ce4eefb683"
+                      "db96d077657a33f4b637d0e89cd68cdbdb1cdfd4" ]
+          :tree "d250a204642f650a4a3858f3b817b0390c07719f",
+          :author "James Williams <j@Jamess-MacBook-2.local> 1476027126 +0100",
+          :committer
+          "James Williams <j@Jamess-MacBook-2.local> 1476027126 +0100"}))
+  )
 )
 
 (deftest t-write-blob
