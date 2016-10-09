@@ -8,7 +8,7 @@
 
 (deftest t-read-index
   (testing "Reading 'first_index' fixture into a struct")
-    (with-redefs [git-root (fn [] "test/fixture1/")]
+    (with-redefs [git-root (fn [] "fixtures/1/")]
       (is (= (read-index)
              [ {:inode 2099386, :device 16777218, :filesize 0x5,
                 :hash "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"
@@ -33,9 +33,9 @@
 
 (deftest t-build-then-index
   (testing "Build then Read an index produces the input index data"
-    (doseq [filepath ["test/fixture1/index"
-                      "test/fixture2/index"
-                      "test/fixture3/index"] ]
+    (doseq [filepath ["fixtures/1/index"
+                      "fixtures/2/index"
+                      "fixtures/3/index"] ]
       (let [index-struct (read-index (read-file filepath))]
         (is (= (-> index-struct build-index read-index)
                index-struct))))
@@ -75,15 +75,15 @@
 
 (deftest t-index-to-tree-objects
   (testing "fixture1 index hash the correct top level hash")
-  (with-redefs [git-root (fn [] "test/fixture1/")]
+  (with-redefs [git-root (fn [] "fixtures/1/")]
     (is (= (first (index-to-tree-objects))
            "ca93b49848670d03b3968c8a481eca55f5fb2150")))
   (testing "fixture2 index hash the correct top level hash")
-  (with-redefs [git-root (fn [] "test/fixture2/")]
+  (with-redefs [git-root (fn [] "fixtures/2/")]
     (is (= (first (index-to-tree-objects))
            "40951cd74421289606500f35d0c6ccb50b552b4b")))
   (testing "fixture3 index hash the correct top level hash")
-  (with-redefs [git-root (fn [] "test/fixture3/")]
+  (with-redefs [git-root (fn [] "fixtures/3/")]
     (is (= (first (index-to-tree-objects))
            "4b90f754d0ddf46643fb5250b47cddfb43102f30")))
 )
@@ -103,7 +103,7 @@
 
 ; TODO: UNSTABLE! Failure from test_file missing sometimes (test interference..)
 (deftest t-checkout-file
-  (let [file "test_file"]
+  (let [file "LICENSE"]
     (testing "Deleted file can be restored from index"
       (assert (.exists (clojure.java.io/as-file file)))
       (assert (not (is-file-modified file)))
