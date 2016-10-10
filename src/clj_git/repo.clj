@@ -3,7 +3,9 @@
   (:use clj-git.util)
   (:gen-class))
 
-(defn git-root [] "./.git/")
+(defn repo-root [] "./")
+
+(defn git-root [] (str (repo-root) ".git/"))
 
 ; TODO: Read this properly..
 (defn get-author [] "j <jamie.williams89@gmail.com>")

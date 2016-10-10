@@ -249,13 +249,14 @@
   (contains? (into #{} (list-staged-files)) filename))
 
 (defn list-all-files []
-  (->>
-    (clojure.java.io/file ".")
-    (file-seq)
-    (filter #(not (.isDirectory %)))
-    (map #(.getPath %))
-    (map #(.substring % 2))
-    (filter #(not (glob-match? "/.git/" %)))
+  (let [path (repo-root)]
+    (->>
+      (clojure.java.io/file path)
+      (file-seq)
+      (filter #(not (.isDirectory %)))
+      (map #(.getPath %))
+      (map #(subs % (count path)))
+      (filter #(not (glob-match? "/.git/" %))))
 ))
 
 (defn list-files []
