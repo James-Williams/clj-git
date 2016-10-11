@@ -1,5 +1,6 @@
 (ns clj-git.core-test
   (:require [clojure.test :refer :all]
+            [clj-git.test-util :refer :all]
             [clj-git.util :refer :all]
             [clj-git.file :refer :all]
             [clj-git.repo :refer :all]
@@ -39,9 +40,10 @@
             "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"))))
 
 (deftest t-branch-lookup
-  (testing "Lookup branch 'first'"
-    (is (= (branch "first")
-            "bfac6b45a0b4086a308a1d1deac59fef612917f8"))))
+  (with-repo-sandbox "fixtures/base_repo.git" "t-branch-lookup"
+    (testing "Lookup branch 'first'"
+      (is (= (branch "first")
+              "844f34ae464bb93210bff3f933e21f5585cd4d6d")))))
 
 (deftest t-tree
   (testing "Two entry tree for ./test/clj-git/"
