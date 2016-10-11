@@ -2,35 +2,35 @@
 
 FIXME: description
 
-## Installation
-
-Download from http://example.com/FIXME.
-
-## Usage
-
-FIXME: explanation
-
-    $ java -jar clj-git-0.1.0-standalone.jar [args]
-
-## Options
-
-FIXME: listing of options this app accepts.
-
 ## Examples
 
-...
+### Modify a file and commit the change
 
-### Bugs
+```clojure
+(print-status)
+Nothing to report, working directory clean
 
-...
+(spit "test_file" "New Line!\n" :append true)
 
-### Any Other Sections
-### That You Think
-### Might be Useful
+(print-status)
+Unstaged Changes:
+  test_file
+  
+(stage-file "test_file")
+
+(print-status)
+Staged For Commit:
+  test_file
+  
+(create-commit "Added a new line to 'test_file'")
+"<NEW_SHA1_HASH>"
+
+(print-status)
+Nothing to report, working directory clean
+```
 
 ## License
 
-Copyright © 2016 FIXME
+Copyright © 2016
 
-Distributed under the Eclipse Public License either version 1.0 or (at
-your option) any later version.
+Distributed under the Eclipse Public License either version 1.0
