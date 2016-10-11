@@ -1,6 +1,5 @@
 (ns clj-git.test-util
   (:require [clojure.test :refer :all]
-            [clojure.java.shell :refer :all]
             [clj-git.repo :refer :all]
             [clj-git.util :refer :all])
   (:gen-class))
@@ -12,7 +11,7 @@
       (list 'assert (list '.mkdir (list 'clojure.java.io/as-file sandbox-pathname)))
       (list 'ok-sh "cp" "-rf" bare-repo-path (str sandbox-pathname "/.git/"))
       (list 'with-redefs ['repo-root (list 'fn [] (str sandbox-pathname "/"))]
-        (list 'with-sh-dir (list 'repo-root)
+        (list 'clojure.java.shell/with-sh-dir (list 'repo-root)
           (list 'ok-sh "git" "checkout" ".")
           (list 'let ['res (cons 'do body)]
             (list 'ok-sh "rm" "-rf" (str "../" sandbox-pathname))
