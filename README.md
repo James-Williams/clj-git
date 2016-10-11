@@ -1,6 +1,10 @@
 # clj-git
 
-FIXME: description
+An implementation of Git Version Control in Clojure.
+
+A library of Clojure functions providing a subset of Git functionality. This includes the manipulation of the working tree, the index and the object store.
+
+DISCLAIMER: This project has been developed for fun and was initially intended just to be a vehicle for learning Clojure. It's a work-in-progress and is not suitable for serious use in it's current state.
 
 ## Examples
 FIXME: Use the machine-readable version of (print-status) in the examples
