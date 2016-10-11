@@ -1,6 +1,7 @@
 (ns clj-git.index-test
   (:require [clojure.test :refer :all]
             [clojure.pprint :refer :all]
+            [clj-git.test-util :refer :all]
             [clj-git.util :refer :all]
             [clj-git.file :refer :all]
             [clj-git.repo :refer :all]
@@ -167,23 +168,35 @@
     (assert (.exists (clojure.java.io/as-file ".git/config")))
     (is (not (contains? (into #{} (list-all-files)) ".git/config")))
   )
+  (with-repo-sandbox "fixtures/base_repo.git" "t-list-all-files"
+    (testing "Correct list of files for fixtures/base_repo"
+      (is (= (list-all-files) ["test_file"]))
+    )
+  )
 )
 
 (deftest t-list-files
-  (testing "test_file is listed"
-    (assert (.exists (clojure.java.io/as-file "test_file")))
-    (is (contains? (into #{} (list-files)) "test_file"))
-  )
+  (with-repo-sandbox "fixtures/gitignore.git" "t-list-files"
+    (testing "test_file is listed"
+      (is (list-files) ["a_file"])
+    )
 
-  (testing ".git file ending is not masked"
-    (assert (not (.exists (clojure.java.io/as-file "test.git"))))
-    (ok-sh "touch" "test.git")
-    (is (contains? (into #{} (list-files)) "test.git"))
-    (clojure.java.io/delete-file "test.git")
-  )
+    (testing ".git file ending is not masked"
+      (is (not (.exists (clojure.java.io/as-file (str (repo-root) "/test.git")))))
+      (spit (str (repo-root) "/test.git") "")
+      (is (contains? (into #{} (list-files)) "test.git"))
+    )
 
-  (testing ".gitignore is not listed"
-    (assert (.exists (clojure.java.io/as-file ".gitignore")))
-    (is (not (contains? (into #{} (list-files)) ".gitignore")))
+    (testing ".gitignore is not listed"
+      (is (.exists (clojure.java.io/as-file (str (repo-root) "/.gitignore"))))
+      (is (not (contains? (into #{} (list-files)) ".gitignore")))
+    )
+
+    (testing "*.swp files are masked correctly"
+      (is (.mkdir (clojure.java.io/as-file (str (repo-root) "a"))))
+      (spit (str (repo-root) "a/file.swp") "contents\n")
+      (is (.exists (clojure.java.io/as-file (str (repo-root) "a/file.swp"))))
+      (is (not (contains? (into #{} (list-files)) "a/file.swp")))
+    )
   )
 )
