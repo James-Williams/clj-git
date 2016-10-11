@@ -9,10 +9,12 @@
     (:out res)))
 
 (defn set-writable [filepath]
-  (ok-sh "chmod" "u+w" filepath))
+  (let [abs-path (.getAbsolutePath (clojure.java.io/as-file filepath))]
+    (ok-sh "chmod" "u+w" abs-path)))
 
 (defn unset-writable [filepath]
-  (ok-sh "chmod" "u-w" filepath))
+  (let [abs-path (.getAbsolutePath (clojure.java.io/as-file filepath))]
+    (ok-sh "chmod" "u-w" abs-path)))
 
 (defn read-file [path]
   (with-open [out (java.io.ByteArrayOutputStream.)]

@@ -8,8 +8,8 @@
             [clj-git.index :refer :all]))
 
 (deftest t-read-index
-  (testing "Reading 'first_index' fixture into a struct")
-    (with-redefs [git-root (fn [] "fixtures/1/")]
+  (with-redefs [git-root (fn [] "fixtures/1/")]
+    (testing "Reading 'first_index' fixture into a struct")
       (is (= (read-index)
              [ {:inode 2099386, :device 16777218, :filesize 0x5,
                 :hash "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"
@@ -102,7 +102,6 @@
     )
 ))
 
-; TODO: UNSTABLE! Failure from test_file missing sometimes (test interference..)
 (deftest t-checkout-file
   (let [file "LICENSE"]
     (testing "Deleted file can be restored from index"
@@ -120,48 +119,49 @@
 )
 
 (deftest t-is-file-modified
-  (let [file "test_file"]
-    (testing (str file " is not modified to begin with")
-      (is (not (is-file-modified file))))
-    (testing "touching file does not make it modified"
-      (ok-sh "touch" file)
-      (is (not (is-file-modified file))))
-    (testing "changing the file does make it modified"
-      (let [file-contents (slurp file)]
-        (spit file "A")
-        (is (is-file-modified file))
-        (spit file file-contents)))
-    (testing "changing one byte of the file does make it modified"
-      (let [file-contents (slurp file)]
-        (spit file (str "A" (subs file-contents 1)))
-        (assert (= (count file-contents) (file-size file)))
-        (is (is-file-modified file))
-        (spit file file-contents)))
-    (testing (str file " is not modified at end of test")
-      (is (not (is-file-modified file))))
-  ))
+  (with-repo-sandbox "fixtures/base_repo.git" "t-is-file-modified"
+    (let [file "test_file"]
+      (testing (str file " is not modified to begin with")
+        (is (not (is-file-modified file)))
+      )
+      (testing "touching file does not make it modified"
+        (ok-sh "touch" file)
+        (is (not (is-file-modified file)))
+      )
+      (testing "changing the file does make it modified"
+        (let [file-contents (slurp (str (repo-root) file))]
+          (spit (str (repo-root) file) "A")
+          (is (is-file-modified file))
+          (spit (str (repo-root) file) file-contents))
+      )
+      (testing "changing one byte of the file does make it modified"
+        (let [file-contents (slurp (str (repo-root) file))]
+          (spit (str (repo-root) file) (str "A" (subs file-contents 1)))
+          (is (= (count file-contents) (file-size (str (repo-root) file))))
+          (is (is-file-modified file))
+          (spit (str (repo-root) file) file-contents))
+      )
+      (testing (str file " is not modified at end of test")
+        (is (not (is-file-modified file)))
+      )
+)))
 
 (deftest t-is-file-staged
-  (let [file "test_file"]
-    (testing (str file " is not modified or staged to begin with")
-      (is (not (is-file-modified file)))
-      (is (not (is-file-staged file)))
-    )
-    (testing "adding a modification using git makes it staged and unmodified"
-      (let [file-contents (slurp file)]
-        (spit file "A")
-        (assert (is-file-modified file))
-        (stage-file file)
-        (assert (not (is-file-modified file)))
-        (is (is-file-staged file))
-        (ok-sh "git" "reset" file) ; TODO: Write and use clojure functions
-        (spit file file-contents)
-    ))
-    (testing (str file " is not modified or staged at end of test")
-      (is (not (is-file-modified file)))
-      (is (not (is-file-staged file)))
-    )
-  ))
+  (with-repo-sandbox "fixtures/base_repo.git" "t-is-file-staged"
+    (let [file "test_file"]
+      (testing (str file " is not modified or staged to begin with")
+        (is (not (is-file-modified file)))
+        (is (not (is-file-staged file)))
+      )
+      (testing "adding a modification using git makes it staged and unmodified"
+        (let [file-contents (slurp (str (repo-root) file))]
+          (spit (str (repo-root) file) "A")
+          (is (is-file-modified file))
+          (stage-file file)
+          (is (not (is-file-modified file)))
+          (is (is-file-staged file)))
+      )
+)))
 
 (deftest t-list-all-files
   (testing ".git/config is not listed"

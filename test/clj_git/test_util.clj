@@ -10,8 +10,8 @@
       (list 'assert (list 'not (list '.exists (list 'clojure.java.io/as-file sandbox-pathname))))
       (list 'assert (list '.mkdir (list 'clojure.java.io/as-file sandbox-pathname)))
       (list 'ok-sh "cp" "-rf" bare-repo-path (str sandbox-pathname "/.git/"))
-      (list 'with-redefs ['repo-root (list 'fn [] (str sandbox-pathname "/"))]
-        (list 'clojure.java.shell/with-sh-dir (list 'repo-root)
+      (list 'with-redefs ['clj-git.repo/repo-root (list 'fn [] (str sandbox-pathname "/"))]
+        (list 'clojure.java.shell/with-sh-dir (list 'clj-git.repo/repo-root)
           (cons 'do (concat
             (list (list 'ok-sh "git" "checkout" "."))
             body

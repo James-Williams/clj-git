@@ -53,13 +53,13 @@
   (write-object (str "blob " (count text) "\0" text)))
 
 (defn write-file-blob [filename]
-  (write-blob (slurp filename)))
+  (write-blob (slurp (str (repo-root) filename))))
 
 (defn write-commit [text]
   (write-object (str "commit " (count text) "\0" text)))
 
 (defn hash-file [filepath]
-  (hash-str (slurp filepath)))
+  (hash-str (slurp (str (repo-root) filepath))))
 
 ;TODO: Use flags from entry hash-map
 (defn tree-entry-bytes [entry]
