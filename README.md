@@ -107,7 +107,16 @@ Development follows the Test Driven Development pattern of RED-GREEN-REFACTOR.
 
 Run all UNIT and INTEGRATION tests: `lein test`
 
-ISSUE: Integration tests currently rely on the projects own Git repository as a text fixture. This has resulted in issues with test reproducibility, independance and stability. Going forwards, existing tests will be ported to use a seperate Git repository sandbox.
+ISSUE: Integration tests currently rely on the projects own Git repository as a text fixture. This has resulted in the following issues:
+
+   * REPRODUCIBILITY
+      * Tests reply on the exact history and state of the current project's Git reposity. Any changes will break a large number of tests.
+   * INDEPENDANCE
+      * Since tests rely on the project's own reposity, and there is only one of these per checkout, the tests must be run sequentialy and with a checkout that is in a good state.
+   * STABILITY
+      * The tests are sensitive to the state of the project's repository. This can lead to false test failures caused by incompatable repository states. These bad states be caused either by other (broken) tests, or by changes made when developing the project.
+
+Going forwards, existing tests will be ported to use a sandboxed Git repository.
 
 ## License
 
