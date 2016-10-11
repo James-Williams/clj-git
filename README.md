@@ -5,7 +5,7 @@ FIXME: description
 ## Examples
 FIXME: Use the machine-readable version of (print-status) in the examples
 
-### Modify a file and commit the change
+### Commit a modified file
 ```clojure
 (spit "test_file" "New Line!\n" :append true)
 
@@ -26,7 +26,7 @@ Staged For Commit:
 Nothing to report, working directory clean
 ```
 
-### Restore a deleted file from the index
+### Restore a file
 ```clojure
 (slurp "test_file")
 "test\n"
@@ -47,6 +47,31 @@ Nothing to report, working directory clean
 
 (slurp "test_file")
 "test\n"
+```
+
+### List working files
+```clojure
+(list-files)
+["a_dir/existing_file"]
+
+(list-untracked-files)
+[]
+
+(list-modified-files)
+[]
+
+(spit "new_file" "I'm a brand new file!\n")
+
+(spit "a_dir/existing_file" "New Contents!\n")
+
+(list-files)
+["a_dir/existing_file" "new_file"]
+
+(list-untracked-files)
+["new_file"]
+
+(list-modified-files)
+["a_dir/existing_file"]
 ```
 
 ## License
