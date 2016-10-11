@@ -87,7 +87,7 @@ Read/Write Index | Working (no support for file permissions)
 Read/Write Working Tree | Working (better support for CWD required)
 Add Files / Reset Files | Done
 Create Commits | Done
-Pull / Push | Not Done
+Pull / Push | Todo
 Packfile Support | Todo
 Branch Support | Todo
 File Permissions | Todo
@@ -101,6 +101,13 @@ Hook Scripts | Todo
 Logging | Todo
 Porcelain Commands | Todo
 
+## Testing
+
+Development follows the Test Driven Development pattern of RED-GREEN-REFACTOR.
+
+Run all UNIT and INTEGRATION tests: `lein test`
+
+ISSUE: Integration tests currently rely on the projects own Git repository as a text fixture. This has resulted in issues with test reproducibility, independance and stability. Going forwards, existing tests will be ported to use a seperate Git repository sandbox.
 
 ## License
 
