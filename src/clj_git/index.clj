@@ -97,6 +97,7 @@
           (conj out e)
           (recur (f-entry r) (conj out e)))))))
 
+; TODO: Needs a test!
 (defn file-index-entry [filename]
   (let [[device inode] (file-dev-inode filename)]
     {:inode inode,
@@ -107,6 +108,7 @@
      :mtime (file-mtime filename),
      :hash (hash-file filename)}))
 
+; TODO: This should be defined inside (build-file-tree)
 (defn positions [pred coll]
   (keep-indexed (fn [idx x]
                   (when (pred x)
@@ -217,12 +219,22 @@
                   filename
                   (->> (read-index) (filter #(= (:name %) filename)) first)) )
   ( [filename index-entry]
-    (let [good-index  (not= (:inode index-entry) 0)] ; TODO: Lookup why this is needed
+    (let [good-index  (not= (:inode index-entry) 0) ; TODO: Lookup why this is needed
+          file-m-time (file-mtime filename)]
       (cond
-        (and good-index (= 0 (.compareTo (:mtime index-entry) (file-mtime filename))))  false
-        (and good-index (not= (:filesize index-entry) (file-size filename)))            true
-        :else                 (not= (:hash index-entry) (hash-file filename))
-    ))))
+        (and good-index
+          (= 0 (.compareTo (:mtime index-entry) file-m-time))
+
+          ; Fix for racy git
+          (> 0 (.compareTo (file-mtime ".git/index") file-m-time)))
+                                                                      false
+
+        (and good-index
+          (not= (:filesize index-entry) (file-size filename)))        true
+        :else
+          (not= (:hash index-entry) (hash-file filename))
+      )
+)))
 
 (defn list-modified-files []
   (let [index       (read-index)

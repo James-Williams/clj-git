@@ -136,8 +136,9 @@
       )
       (testing "changing one byte of the file does make it modified"
         (let [file-contents (slurp (str (repo-root) file))]
+          (is (not (is-file-modified file)))
           (spit (str (repo-root) file) (str "A" (subs file-contents 1)))
-          (is (= (count file-contents) (file-size (str (repo-root) file))))
+          (is (= (count file-contents) (file-size file)))
           (is (is-file-modified file))
           (spit (str (repo-root) file) file-contents))
       )
