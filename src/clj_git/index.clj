@@ -256,8 +256,8 @@
       (filter #(not (.isDirectory %)))
       (map #(.getPath %))
       (map #(subs % (count path)))
-      (filter #(not (glob-match? "/.git/" %))))
-))
+      (filter #(not (glob-match? "/.git/" %)))
+)))
 
 (defn list-files []
   (let [gitignore-patterns  (-> (slurp ".gitignore") (clojure.string/split #"\n"))

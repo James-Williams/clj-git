@@ -12,10 +12,10 @@
       (list 'ok-sh "cp" "-rf" bare-repo-path (str sandbox-pathname "/.git/"))
       (list 'with-redefs ['repo-root (list 'fn [] (str sandbox-pathname "/"))]
         (list 'clojure.java.shell/with-sh-dir (list 'repo-root)
-          (list 'ok-sh "git" "checkout" ".")
-          (list 'let ['res (cons 'do body)]
-            (list 'ok-sh "rm" "-rf" (str "../" sandbox-pathname))
-            'res)))))
+          (cons 'do (concat
+            (list (list 'ok-sh "git" "checkout" "."))
+            body
+            (list (list 'ok-sh "rm" "-rf" (str "../" sandbox-pathname)))))))))
 
 (deftest t-with-repo-sandbox
   (with-repo-sandbox "fixtures/base_repo.git" "t-with-repo-sandbox"
