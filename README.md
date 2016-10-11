@@ -78,6 +78,30 @@ Nothing to report, working directory clean
 ["a_dir/existing_file"]
 ```
 
+## Feature Status
+
+Feature | Status
+------- | ------
+Read/Write Objects | Done
+Read/Write Index | Working (no support for file permissions)
+Read/Write Working Tree | Working (better support for CWD required)
+Add Files / Reset Files | Done
+Create Commits | Done
+Pull / Push | Not Done
+Packfile Support | Todo
+Branch Support | Todo
+File Permissions | Todo
+Initalize New Repo | Todo
+View History | Todo
+Merging / Rebasing | Todo
+Diffing | Todo
+File-Merging | Todo
+Config / User IDs | Todo
+Hook Scripts | Todo
+Logging | Todo
+Porcelain Commands | Todo
+
+
 ## License
 
 Copyright © 2016
