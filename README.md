@@ -3,13 +3,10 @@
 FIXME: description
 
 ## Examples
+FIXME: Use the machine-readable version of (print-status) in the examples
 
 ### Modify a file and commit the change
-
 ```clojure
-(print-status)
-Nothing to report, working directory clean
-
 (spit "test_file" "New Line!\n" :append true)
 
 (print-status)
@@ -27,6 +24,29 @@ Staged For Commit:
 
 (print-status)
 Nothing to report, working directory clean
+```
+
+### Restore a deleted file from the index
+```clojure
+(slurp "test_file")
+"test\n"
+
+(clojure.java.io/delete-file "test_file")
+
+(slurp "test_file")
+FileNotFoundException test_file (No such file or directory) ..
+
+(print-status)
+Unstaged Changes:
+  test_file
+
+(checkout-file "test_file")
+
+(print-status)
+Nothing to report, working directory clean
+
+(slurp "test_file")
+"test\n"
 ```
 
 ## License
