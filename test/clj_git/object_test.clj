@@ -52,16 +52,33 @@
              "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"))
 ))
 
+(deftest t-hash-blob
+  (testing "Empty Blob"
+    (is (= (hash-blob [])
+            "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391"))
+  )
+  (testing "Test Blob"
+    (is (= (hash-blob (.getBytes "test\n"))
+            "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"))
+  )
+)
+
 (deftest t-hash-file
   (with-repo-sandbox "fixtures/base_repo.git" "t-hash-file"
     (testing "Hash test_file")
       (is (= (hash-file "test_file")
              "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")
     )
-    (testing "Hash unicode char")
+    (testing "Hash unicode char"
       (spit (str (repo-root) "utf8_file") "©\n")
       (is (= (hash-file "utf8_file")
-             "767079b3f717d1ffad2746326a624a2bea694ad5")
+             "767079b3f717d1ffad2746326a624a2bea694ad5"))
+    )
+    (testing "Hash binary file"
+      (with-open [wr (clojure.java.io/output-stream (str (repo-root) "binfile"))]
+        (.write wr (byte-array [0xb9 0x90 0x8d 0x7f 0x28 0x5e 0x22 0x81 0x0a])))
+      (is (= (hash-file "binfile")
+             "e3f68abb8545e2fa184b835c5e3feb65476833d6"))
     )
   )
 )

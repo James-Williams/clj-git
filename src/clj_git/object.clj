@@ -1,16 +1,17 @@
 (ns clj-git.object
   (:use clj-message-digest.core)
-  (:use clojure.java.io)
+  (:require [clojure.java.io :as io])
   (:use clj-git.util)
   (:use clj-git.repo)
   (:gen-class))
 
 (def SHA-1-HEX-LENGTH 40)
 
-(defn hash-str [text]
-  (let [payload-byte-length (count (.getBytes text))
-        full-text (str "blob " payload-byte-length "\0" text)]
-    (sha-1-hex full-text)))
+(defn hash-blob [payload]
+  (let [payload-byte-length (count payload)
+        header-bytes        (.getBytes (str "blob " payload-byte-length "\000"))
+        full-bytes          (concat (seq header-bytes) (seq payload))]
+    (sha-1-hex (byte-array full-bytes))))
 
 (defn decompress-zlib [data]
   (let [buffer (byte-array (alength data))
@@ -42,10 +43,10 @@
         filepath (str (git-root) "objects/" d-name "/" f-name)
         data (byte-array (map byte bs))
         bdata (compress-zlib data)]
-    (make-parents filepath)
-    (if (not (.exists (clojure.java.io/as-file filepath)))
+    (io/make-parents filepath)
+    (if (not (.exists (io/as-file filepath)))
       (do
-        (with-open [wrtr (output-stream filepath)]
+        (with-open [wrtr (io/output-stream filepath)]
           (.write wrtr bdata))
         (unset-writable filepath)))
     hash-text))
@@ -60,7 +61,7 @@
   (write-object (str "commit " (count text) "\0" text)))
 
 (defn hash-file [filepath]
-  (hash-str (slurp (str (repo-root) filepath))))
+  (hash-blob (.toByteArray (read-file (str (repo-root) filepath)))))
 
 ;TODO: Use flags from entry hash-map
 (defn tree-entry-bytes [entry]
@@ -111,7 +112,7 @@
 
 (defn all-objects []
   (let [object-path (str (git-root) "objects/")
-        pref-files (drop 1 (file-seq (clojure.java.io/file object-path)))
+        pref-files (drop 1 (file-seq (io/file object-path)))
         are-files (filter #(.isFile %) pref-files)
         names (map #(str (.getName (.getParentFile %))
                          (.getName %)) are-files)]
@@ -135,7 +136,7 @@
 
 (defn read-object [hash-prefix]
   (let [hash-hex (complete-hash hash-prefix)
-        filepath (str (git-root) 
+        filepath (str (git-root)
                       "objects/"
                       (subs hash-hex 0 2) "/" 
                       (subs hash-hex 2 (count hash-hex)))

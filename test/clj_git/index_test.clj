@@ -90,17 +90,18 @@
 )
 
 (deftest t-stage-file
-  (let [filename "newfile"]
-    (testing "New file get's added to index"
-      (assert (not (.exists (clojure.java.io/as-file filename))))
-      (spit filename "hello")
-      (is (not (is-file-staged filename)))
-      (stage-file filename)
-      (is (is-file-staged filename))
-      (ok-sh "git" "reset" filename)
-      (clojure.java.io/delete-file filename)
-    )
-))
+  (with-repo-sandbox "fixtures/base_repo.git" "t-stage-file"
+    (let [filename "newfile"]
+      (testing "New file get's added to index"
+        (assert (not (.exists (clojure.java.io/as-file (str (repo-root) filename)))))
+        (spit (str (repo-root) filename) "hello")
+        (is (not (is-file-staged filename)))
+        (stage-file filename)
+        (is (is-file-staged filename))
+        (ok-sh "git" "reset" filename)
+        (clojure.java.io/delete-file (str (repo-root) filename))
+      )
+)))
 
 (deftest t-checkout-file
   (let [file "LICENSE"]
