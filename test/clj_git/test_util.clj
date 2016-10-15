@@ -14,8 +14,10 @@
         (list 'clojure.java.shell/with-sh-dir (list 'clj-git.repo/repo-root)
           (cons 'do (concat
             (list (list 'ok-sh "git" "checkout" "."))
-            body
-            (list (list 'ok-sh "rm" "-rf" (str "../" sandbox-pathname)))))))))
+            (list (list 'try
+              (cons 'do body)
+              (list 'catch 'Exception 'e)
+              (list 'finally (list 'ok-sh "rm" "-rf" (str "../" sandbox-pathname)))))))))))
 
 (deftest t-with-repo-sandbox
   (with-repo-sandbox "fixtures/base_repo.git" "t-with-repo-sandbox"
@@ -25,6 +27,23 @@
     )
     (testing "(git-root) points to the correct location"
       (is (= (git-root) "t-with-repo-sandbox/.git/"))
+    )
+  )
+)
+
+(deftest t-with-repo-sandbox-cleanup
+  (testing "with-repo-sandbox cleanups up dir after exception"
+    (is (thrown? Exception
+      (with-repo-sandbox "fixtures/base_repo.git" "t-with-repo-sandbox-cleanup"
+        (throw (Exception.)))))
+    (is (not (.exists (clojure.java.io/as-file "t-with-repo-sandbox-cleanup"))))
+  )
+)
+
+(deftest t-with-repo-sandbox-multiargs
+  (testing "with-repo-sandbox handles mutiple body args"
+    (with-repo-sandbox "fixtures/base_repo.git" "t-with-repo-sandbox-multiargs"
+      (+ 1 2) (- 3 4)
     )
   )
 )
