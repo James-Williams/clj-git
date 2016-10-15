@@ -91,17 +91,24 @@
 
 (deftest t-stage-file
   (with-repo-sandbox "fixtures/base_repo.git" "t-stage-file"
-    (let [filename "newfile"]
-      (testing "New file get's added to index"
+    (testing "New file get's added to index"
+      (let [filename "newfile"]
         (assert (not (.exists (clojure.java.io/as-file (str (repo-root) filename)))))
         (spit (str (repo-root) filename) "hello")
         (is (not (is-file-staged filename)))
         (stage-file filename)
         (is (is-file-staged filename))
         (ok-sh "git" "reset" filename)
-        (clojure.java.io/delete-file (str (repo-root) filename))
-      )
-)))
+        (clojure.java.io/delete-file (str (repo-root) filename)))
+    )
+    (testing "Unicode file can be added to index"
+      (let [file "utf8_file"]
+        (assert (not (.exists (clojure.java.io/as-file (str (repo-root) file)))))
+        (spit (str (repo-root) file) "©\n")
+        (stage-file file)
+        (is (is-file-staged file)))
+    )
+))
 
 (deftest t-checkout-file
   (let [file "LICENSE"]

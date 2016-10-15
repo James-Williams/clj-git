@@ -41,7 +41,7 @@
 (deftest t-write-blob
   (with-repo-sandbox "fixtures/base_repo.git" "t-write-blob"
     (testing "Store test_file blob")
-      (is (= (write-blob (slurp (str (repo-root) "test_file")))
+      (is (= (write-blob (.getBytes (slurp (str (repo-root) "test_file"))))
              "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"))
 ))
 

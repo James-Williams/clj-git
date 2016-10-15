@@ -7,12 +7,6 @@
 
 (def SHA-1-HEX-LENGTH 40)
 
-(defn hash-blob [payload]
-  (let [payload-byte-length (count payload)
-        header-bytes        (.getBytes (str "blob " payload-byte-length "\000"))
-        full-bytes          (concat (seq header-bytes) (seq payload))]
-    (sha-1-hex (byte-array full-bytes))))
-
 (defn decompress-zlib [data]
   (let [buffer (byte-array (alength data))
         out (java.io.ByteArrayOutputStream.)
@@ -51,17 +45,28 @@
         (unset-writable filepath)))
     hash-text))
 
-(defn write-blob [text]
-  (write-object (str "blob " (count text) "\0" text)))
+(defn hash-blob [payload]
+  (let [payload-byte-length (count payload)
+        header-bytes        (.getBytes (str "blob " payload-byte-length "\000"))
+        full-bytes          (concat (seq header-bytes) (seq payload))]
+    (sha-1-hex (byte-array full-bytes))))
+
+(defn write-blob [payload]
+  (let [payload-byte-length (count payload)
+        header-bytes        (.getBytes (str "blob " payload-byte-length "\000"))
+        full-bytes          (byte-array (concat (seq header-bytes) (seq payload)))]
+    (write-object full-bytes)))
 
 (defn write-file-blob [filename]
-  (write-blob (slurp (str (repo-root) filename))))
-
-(defn write-commit [text]
-  (write-object (str "commit " (count text) "\0" text)))
+  (write-blob (.toByteArray (read-file (str (repo-root) filename)))))
 
 (defn hash-file [filepath]
   (hash-blob (.toByteArray (read-file (str (repo-root) filepath)))))
+
+; TODO: Test this works with unicode chars in message string
+; TODO: Currently no tests for this function..
+(defn write-commit [text]
+  (write-object (.getBytes (str "commit " (count text) "\0" text))))
 
 ;TODO: Use flags from entry hash-map
 (defn tree-entry-bytes [entry]
