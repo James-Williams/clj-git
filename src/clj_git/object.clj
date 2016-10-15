@@ -8,7 +8,8 @@
 (def SHA-1-HEX-LENGTH 40)
 
 (defn hash-str [text]
-  (let [full-text (str "blob " (count text) "\0" text)]
+  (let [payload-byte-length (count (.getBytes text))
+        full-text (str "blob " payload-byte-length "\0" text)]
     (sha-1-hex full-text)))
 
 (defn decompress-zlib [data]

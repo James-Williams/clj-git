@@ -56,7 +56,13 @@
   (with-repo-sandbox "fixtures/base_repo.git" "t-hash-file"
     (testing "Hash test_file")
       (is (= (hash-file "test_file")
-             "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"))
+             "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")
+    )
+    (testing "Hash unicode char")
+      (spit (str (repo-root) "utf8_file") "©\n")
+      (is (= (hash-file "utf8_file")
+             "767079b3f717d1ffad2746326a624a2bea694ad5")
+    )
   )
 )
 
