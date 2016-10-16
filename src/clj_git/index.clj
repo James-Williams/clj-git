@@ -207,7 +207,7 @@
   (let [entry (first (filter #(= (:name %) filename) (read-index)))
         h     (:hash entry)]
     (assert entry)
-    (spit filename (blob h))))
+    (write-file filename (blob h))))
 
 ; Use the following rules to quickly check for modified files:
 ;         if filesystem mtime matches index           -> return False

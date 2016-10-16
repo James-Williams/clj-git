@@ -21,6 +21,10 @@
     (clojure.java.io/copy (clojure.java.io/input-stream path) out)
     out))
 
+(defn write-file [path payload]
+  (with-open [out (java.io.BufferedOutputStream. (java.io.FileOutputStream. path))]
+    (.write out payload)))
+
 (defn to-str [x] (apply str (map char x)))
 
 (defn current-unix-time []

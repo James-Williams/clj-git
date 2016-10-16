@@ -119,3 +119,21 @@
            "ca93b49848670d03b3968c8a481eca55f5fb2150"))
 )
 
+(deftest t-blob
+  (with-repo-sandbox "fixtures/base_repo.git" "t-blob"
+    (testing "Object Content"
+      (is (= (seq (blob "9daeafb9864cf43055ae93beb0afd6c7d144bfa4"))
+             (seq (.getBytes "test\n"))))
+    )
+    (testing "Object Type"
+      (is (= (object-type "9daeafb9864cf43055ae93beb0afd6c7d144bfa4")
+             "blob"))
+    )
+  )
+  (with-repo-sandbox "fixtures/binfile.git" "t-blob"
+    (testing "Reading a binary blob"
+      (is (=  (seq (blob "e3f68abb8545e2fa184b835c5e3feb65476833d6"))
+              (seq (byte-array [0xb9 0x90 0x8d 0x7f 0x28 0x5e 0x22 0x81 0x0a]))))
+    )
+  )
+)

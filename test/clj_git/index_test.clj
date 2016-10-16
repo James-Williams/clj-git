@@ -108,7 +108,7 @@
         (stage-file file)
         (is (is-file-staged file)))
     )
-))
+  ))
 
 (deftest t-checkout-file
   (let [file "LICENSE"]
@@ -122,6 +122,14 @@
         (checkout-file file)
         (is (not (is-file-modified file)))
         (spit file contents))
+    )
+  )
+  (with-repo-sandbox "fixtures/binfile.git" "t-checkout-file"
+    (testing "Checkout binary file from index"
+      (clojure.java.io/delete-file (str (repo-root) "binfile"))
+      (checkout-file "binfile")
+      (is (=  (seq (.toByteArray (read-file "binfile")))
+              (seq (byte-array [0xb9 0x90 0x8d 0x7f 0x28 0x5e 0x22 0x81 0x0a]))))
     )
   )
 )

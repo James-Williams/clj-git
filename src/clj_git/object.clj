@@ -182,10 +182,13 @@
         (recur (f-entry r) (conj out e))))))
 
 (defn blob [hash-hex]
-  (to-str (second (read-object hash-hex))))
+  (->> hash-hex
+    read-object
+    second
+    byte-array))
 
 (defn commit [hash-str]
-  (let [text  (blob hash-str)
+  (let [text  (String. (blob hash-str))
         lines (clojure.string/split text #"\n")
         [header body] (split-with #(not= % "") lines)
         pairs'(->> header
