@@ -1,11 +1,24 @@
 (ns clj-git.object
   (:use clj-message-digest.core)
   (:require [clojure.java.io :as io])
+  (:require [clojure.spec.alpha :as s])
   (:use clj-git.util)
   (:use clj-git.repo)
   (:gen-class))
 
 (def SHA-1-HEX-LENGTH 40)
+
+(s/check-asserts true)
+
+(s/def ::sha-1-hash
+  (s/and
+    string?
+    #(= (count %) SHA-1-HEX-LENGTH)))
+
+(s/def ::sha-1-prefix
+  (s/and
+    string?
+    #(<= (count %) SHA-1-HEX-LENGTH)))
 
 (defn decompress-zlib [data]
   (let [buffer (byte-array (alength data))
@@ -113,7 +126,7 @@
        (sha-1-hex)))
 
 (defn is-valid-hash-str [s]
-  (= (count s) SHA-1-HEX-LENGTH))
+  (s/valid? ::sha-1-hash s))
 
 (defn all-objects []
   (let [object-path (str (git-root) "objects/")
@@ -124,7 +137,7 @@
     (filter is-valid-hash-str names)))
 
 (defn complete-hash [hash-prefix]
-  (assert (<= (count hash-prefix) SHA-1-HEX-LENGTH))
+  (s/assert ::sha-1-prefix hash-prefix)
   (let [len (count hash-prefix)
         all (all-objects)
         ps (map #(subs % 0 len) all)

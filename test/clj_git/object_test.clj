@@ -137,3 +137,21 @@
     )
   )
 )
+
+(deftest t-is-valid-hash-str
+  (testing "Valid 40 Char Hash"
+    (is (true?
+      (is-valid-hash-str
+        "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391")))
+  )
+  (testing "Invalid 39 Char Hash"
+    (is (false?
+      (is-valid-hash-str
+        "e69de29bb2d1d6434b8b29ae775ad8c2e48c539")))
+  )
+  (testing "Invalid 41 Char Hash"
+    (is (false?
+      (is-valid-hash-str
+        "e69de29bb2d1d6434b8b29ae775ad8c2e48c53919")))
+  )
+)
