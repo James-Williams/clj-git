@@ -2,6 +2,7 @@
   (:use clj-message-digest.core)
   (:require [clojure.java.io :as io])
   (:require [clojure.spec.alpha :as s])
+  (:require [clojure.spec.test.alpha :as stest])
   (:use clj-git.util)
   (:use clj-git.repo)
   (:gen-class))
@@ -18,7 +19,9 @@
 (s/def ::sha-1-prefix
   (s/and
     string?
-    #(<= (count %) SHA-1-HEX-LENGTH)))
+    #(<= (count %) SHA-1-HEX-LENGTH)
+    #(> (count %) 0)
+))
 
 (defn decompress-zlib [data]
   (let [buffer (byte-array (alength data))
@@ -136,8 +139,12 @@
                          (.getName %)) are-files)]
     (filter is-valid-hash-str names)))
 
+(s/fdef complete-hash
+  :args (s/cat :hash-prefix ::sha-1-prefix)
+  :ret ::sha-1-hash
+)
+
 (defn complete-hash [hash-prefix]
-  (s/assert ::sha-1-prefix hash-prefix)
   (let [len (count hash-prefix)
         all (all-objects)
         ps (map #(subs % 0 len) all)
@@ -151,6 +158,8 @@
       (throw (Exception. 
                (str "Ambiguous object prefix '" hash-prefix "'")))
       :else (second (first matches)))))
+
+(stest/instrument `complete-hash)
 
 (defn read-object [hash-prefix]
   (let [hash-hex (complete-hash hash-prefix)
